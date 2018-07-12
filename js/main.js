@@ -5,7 +5,6 @@
 !(function () {
     "use strict"
 //#### parameters Start ####
-<<<<<<< HEAD
 //
 //        'OneDrive',
 //        'waffleio',
@@ -29,13 +28,6 @@
     }
 
 //show all or selected link types ("All", "Quote", "Mention", "first_reply")
-=======
-    //var dataName = "data_d3_d3.json";
-    //var dataName = "data_Homebrew_brew.json"
-    var dataName = "data/viz_OneDrive_16727251.json"
-    
-//show all or selected link types ("All", "Quote", "Mention")
->>>>>>> 186945e988ecbbed1b546ed295e4886f36f03f36
     var linkTypeSelected = "All"
 
 
@@ -297,7 +289,6 @@
         return res
     }
 
-<<<<<<< HEAD
     function assignGroups(nodes, groups) {
 
         if (groups !== undefined) {
@@ -314,24 +305,6 @@
             })
         }
         return nodes
-=======
-    function assignGroups(nodes, links, groups) {
-
-            if (groups !== undefined) {
-                var node_ids = Object.keys(groups)
-
-                node_ids.forEach(function (d) {
-                    var _d = +d
-                    var nextNode = nodes.find(x => x.id === _d)
-                    if (nextNode !== undefined) {
-                        nextNode.group = groups[d]
-                    } else {
-                        console.log("node not found. id: " + d)
-                    }
-                })
-            }
-            return nodes
->>>>>>> 186945e988ecbbed1b546ed295e4886f36f03f36
     }
 
     function drawTitle(info) {
@@ -363,26 +336,6 @@
 
         var allLinksRaw = data.links
         var allGroups = data.groups
-<<<<<<< HEAD
-=======
-
-        /* minDate = moment(Math.min.apply(Math, allLinksRaw.map(function (o) {
-         return o.timestamp
-         }))).add(linkInterval, "days") */
-
-        minDate = moment(Object.keys(allGroups).sort()[0])
-
-        var oldDate = moment(minDate);
-        
-        oldDate.startOf(sliderInterval);
-        var offset = minDate.diff(oldDate, 'days');
-        
-        maxDate = moment(Math.max.apply(Math, allLinksRaw.map(function (o) {
-            return o.timestamp;
-        })));
-
-        var links = filterAndConsolidate(allLinksRaw, minDate, linkTypeSelected)
->>>>>>> 186945e988ecbbed1b546ed295e4886f36f03f36
         var allNodes = data.nodes
         setInitialPosition(allNodes);
 
@@ -600,19 +553,12 @@
                     .attr("x", sliderScale(value) + "px")
 
             value = Math.round(value);
-<<<<<<< HEAD
 
             var newDate = moment(value).startOf(sliderInterval).add(offset, 'days');
 
             if (!newDate.isSame(oldDate)) {
                 // do something in case the date has been changed
 
-=======
-            
-            var newDate = moment(value).startOf(sliderInterval).add(offset, 'days');
-
-            if (!newDate.isSame(oldDate)) {
->>>>>>> 186945e988ecbbed1b546ed295e4886f36f03f36
                 oldDate = moment(newDate)
 
                 linksSelection = filterAndConsolidate(allLinksRaw, newDate, linkTypeSelected);
