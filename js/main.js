@@ -16,7 +16,7 @@
 //        'gatsbyjs'
 //
 
-    var project_name = "novus"
+    var project_name = "rathena"
     
     var filtered = false
     
