@@ -305,7 +305,7 @@
     }
 
     function drawTitle(info) {
-        var titleString = "Communication network for " + info[0].owner + " " + info[0].repo
+        var titleString = "Communication network of project " + info[0].owner + " " + info[0].repo
         var titleData = [titleString]
 
         var title = d3.select("#title")
@@ -847,23 +847,19 @@
 
         }
 
-        generateElement(calcNumNodes, "Number of Nodes")
-        generateElement(calcNumLinks, "Number of Links")
-        generateElement(calcNumGroups, "Number of Groups")
+        generateElement(calcNumNodes, "No. of Nodes")
+        generateElement(calcNumLinks, "No. of Links")
+        generateElement(calcNumGroups, "No. of Groups")
         generateElement(readModularity, "Modularity")
 
     }
 
     function drawInfoBox(info) {
-        var infoData = [
-            "Project: " + info[0].owner + " " + info[0].repo,
-            info[0].no_comments + " comments ",
-            info[0].total_nodes + " nodes",
-            info[0].size_core + " core members",
-            info[0].total_links + " links",
-            "intervals: " + sliderInterval,
-            "moving timeframe length: " + 30 + " days"]
-
+        var infoData = 
+            [info[0].owner + " " + info[0].repo + "consists of " +
+            info[0].total_nodes + " nodes with " +
+            info[0].total_links + " links. " +
+            info[0].no_comments + " comments have been analyzed."]
 
         var infoText = d3.select("#infobox")
                 .selectAll("text")

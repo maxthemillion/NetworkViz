@@ -1,11 +1,10 @@
-  
+
 svg {
     overflow: visible;
 }
 
-
 body {
-    font-family: Helvetica, Verdana, sans-serif;   
+    font-family: Verdana, sans-serif;   
 }
 
 .content-wrapper {
@@ -19,6 +18,8 @@ body {
     width: 800px;
     height: 50px;
     margin-top: 10px;
+    position:relative;
+    margin-left:10%;
 }
 
 #graph{
@@ -27,13 +28,7 @@ body {
 }
 
 #infobox {
-    margin-top: 10em;
-    margin-right: 5em;
-    padding: 1em 1em 1em 1em;
-    border: 0px solid grey;
-    position: absolute;
-    right: 20px;
-    top: 100px;
+    margin-left:10%
 }
 
 .infobox-text{
@@ -43,9 +38,7 @@ body {
 }
 
 h1 {
-    font-weight: bold;
-    font-size: 1em;
-    text-align: center;
+    font-weight: lighter;
 }
 
 p {
