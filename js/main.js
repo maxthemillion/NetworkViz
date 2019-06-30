@@ -241,6 +241,7 @@
                     })
                 })
                 .object(links);
+                
         var typeKeys = Object.keys(linkMap);
         var resArray = [];
         for (var i = 0; i < typeKeys.length; ++i) {
