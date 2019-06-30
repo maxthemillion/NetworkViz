@@ -45,8 +45,8 @@
 //set node properties
     var minNodeRadius = 6
     var maxNodeRadius = 100
-    var minLinkWidth = 1
-    var maxLinkWidth = 100
+    var minLinkWidth = 5
+    var maxLinkWidth = 200
 
 //set repulsion strength (<0)
     var chargeStrength = -200
@@ -427,17 +427,15 @@
                 .force("x", d3.forceX(chartHeight / 2))
 
         var link = svg
-                .selectAll("line")
+                .selectAll("polygon")
                 .data(links)
                 .enter()
-                .append("line")
+                .append("polygon")
                 .attr("class", "link")
-                .style("stroke", function (d) {
+                .style("fill", function (d) {
                     return linkColor(d.rel_type)
                 })
-                .style("stroke-width", function (d) {
-                    return linkWeightScale(d.weight)
-                })
+
 
         var node = svg.selectAll("circle")
                 .data(nodes)
@@ -450,36 +448,33 @@
                 .style("fill", function (d) {
                     return groupColor(d.group)
                 })
-                .style("border-width", "3px")
-                .style("border-color", "white")
-                .style("border-style", "solid")
 
         /* define simulation steps
          * 
          */
-
+        
 
         var ticked = function () {
             link
-                    .attr("x1", function (d) {
-                        return d.source.x
-                    })
-                    .attr("y1", function (d) {
-                        return d.source.y
-                    })
-                    .attr("x2", function (d) {
-                        return d.target.x
-                    })
-                    .attr("y2", function (d) {
-                        return d.target.y
-                    });
+                .attr("points",  function(d){
+                    var points = [
+                        {'x': d.source.x + linkWeightScale(d.weight)/2, 'y':d.source.y},
+                        {'x': d.source.x - linkWeightScale(d.weight)/2, 'y':d.source.y},
+                        {'x': d.target.x, 'y': d.target.y}]
+                    
+                    return points.map(
+                        function(d){return [d.x, d.y].join(',');})
+                            .join(" ")
+
+                })
+
             node
-                    .attr("cx", function (d) {
-                        return d.x
-                    })
-                    .attr("cy", function (d) {
-                        return d.y
-                    });
+                .attr("cx", function (d) {
+                    return d.x
+                })
+                .attr("cy", function (d) {
+                    return d.y
+                });
         }
 
 
@@ -598,16 +593,12 @@
                 link.exit()
                         .remove();
                 link = link.enter()
-                        .append("line")
+                        .append("polygon")
                         .attr("class", "link")
                         .merge(link)
-                        .style("stroke", function (d) {
+                        .style("fill", function (d) {
                             return linkColor(d.rel_type)
                         })
-                        .style("stroke-width", function (d) {
-                            return linkWeightScale(d.weight)
-                        })
-
 
                 var n = d3.selectAll(".link").size()
 
