@@ -61,13 +61,13 @@ p {
 }
 
 .chartLine {
-    stroke: blue;
+    stroke: steelblue;
     stroke-width: 2px;
     fill: transparent;
 }
 
 .node text {
-    font-family: sans-serif;
+    font-family: 'Ubuntu', sans-serif;
     font-size: 7px;
     stroke: #333;
     cursor: pointer;
@@ -155,7 +155,7 @@ p {
 }
 
 .grid {
-    stroke-color: grey;
+    stroke: grey;
     opacity: 0.5;
 }
 
@@ -165,8 +165,9 @@ p {
 
 .s-chart-cursor{
     width: 1px;
-    fill: red;
+    fill: gray;
     position: absolute;
+    opacity: 0.7;
 }
 
 div.tooltip {

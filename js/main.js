@@ -821,7 +821,8 @@
 
             sChart.append("path")
                     .attr("class", "chartLine")
-                    .attr("d", valueline(elemData));
+                    .attr("d", valueline(elemData))
+
 
             sChart.append("g")
                     .attr("transform", "translate(0," + elementHeight + ")")
@@ -836,6 +837,7 @@
             sChart.append("rect")
                     .attr("class", "s-chart-cursor")
                     .style("height", elementHeight)
+
         }
 
         generateElement(calcNumNodes, "Number of Nodes")
