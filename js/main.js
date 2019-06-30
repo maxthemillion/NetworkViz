@@ -46,10 +46,10 @@
     var minNodeRadius = 6
     var maxNodeRadius = 100
     var minLinkWidth = 1
-    var maxLinkWidth = 300
+    var maxLinkWidth = 100
 
 //set repulsion strength (<0)
-    var chargeStrength = -100
+    var chargeStrength = -200
 
 //set collision parameters
     var nodePadding = 20
@@ -227,7 +227,7 @@
 
         var linkMap = d3.nest()
                 .key(function (d) {
-                    return d.rel_type;
+                    return showLinkColor ? d.rel_type : "grey"
                 })
                 .key(function (d) {
                     return d.source;
