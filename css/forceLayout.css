@@ -115,7 +115,12 @@ p {
 .slider {
     position: relative;
     margin-top: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
+}
+
+.slider-text {
+    position: relative;
+    margin-top: 10px;
 }
 
 .slider-tray {

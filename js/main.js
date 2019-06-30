@@ -43,10 +43,10 @@
     var showLinkColor = false
 
 //set node properties
-    var minNodeRadius = 4
-    var maxNodeRadius = 30
+    var minNodeRadius = 6
+    var maxNodeRadius = 100
     var minLinkWidth = 1
-    var maxLinkWidth = 10
+    var maxLinkWidth = 300
 
 //set repulsion strength (<0)
     var chargeStrength = -100
@@ -87,7 +87,6 @@
             this.parentNode.appendChild(this)
         })
     }
-
 
     function main() {
         setSize()
@@ -318,7 +317,7 @@
                 .text(function (d) {
                     return d;
                 })
-                .attr("x", "20%")
+                .attr("x", "10%")
                 .attr("y", "66%")
     }
 
@@ -371,6 +370,7 @@
         minDate = moment(Object.keys(allGroups).sort()[0])
         var oldDate = moment(minDate);
         oldDate.startOf(sliderInterval);
+
         var offset = minDate.diff(oldDate, 'days');
         maxDate = moment(Math.max.apply(Math, allLinksRaw.map(function (o) {
             return o.timestamp;
@@ -492,8 +492,7 @@
 
         var dispatch = d3.dispatch("sliderChange", "sliderEnd") // define dispatch events
 
-        wrapper
-                .append("div")
+        wrapper.append("div")
                 .attr("class", "slider")
 
         var slider = d3.select(".slider")
@@ -533,12 +532,10 @@
                 .attr("class", "axis-main")
                 .attr("id", "main")
                 .attr("transform", "translate(0, 8)")
-                .call(d3.axisBottom(sliderTimeScale).tickFormat(d3.timeFormat("%m-%y")))
-                .selectAll("text")
-                .style("text-anchor", "end")
-                .attr("dx", "-.8em")
-                .attr("dy", ".15em")
-                .attr("transform", "rotate(-35)");
+                .call(
+                    d3.axisBottom(sliderTimeScale)
+                    .ticks(d3.timeMonth.every(6))
+                    .tickFormat(d3.timeFormat("%d %B %y")))
 
         dispatch.on("sliderChange", function () {
 
@@ -776,16 +773,21 @@
         function generateElement(dataFunc, title) {
             // set the ranges
             var elemData = dataFunc()
-            var domain_max = d3.max(elemData, function (d) {
+            var domainMax = d3.max(elemData, function (d) {
                 return d.num
             })
 
-            var domain_min = d3.min(elemData, function (d) {
+            var domainMin = d3.min(elemData, function (d) {
                 return Math.min(d.num, 0)
             })
 
-            var x = d3.scaleTime().range([0, chartWidth]).domain([minDate, maxDate])
-            var y = d3.scaleLinear().range([elementHeight, 0]).domain([domain_min, domain_max])
+            var x = d3.scaleTime()
+                    .range([0, chartWidth])
+                    .domain([minDate, maxDate])
+
+            var y = d3.scaleLinear()
+                    .range([elementHeight, 0])
+                    .domain([domainMin, domainMax])
 
             var valueline = d3.line()
                     .x(function (d) {
@@ -800,8 +802,7 @@
                     .attr("width", chartWidth)
                     .attr("height", elementHeight + elementTitleHeight);
 
-            var sChartTitle = sChartWrapper
-                    .append("svg")
+            sChartWrapper.append("svg")
                     .attr("class", "s-chart-title")
                     .attr("width", chartWidth)
                     .attr("height", elementTitleHeight)
@@ -823,16 +824,18 @@
                     .attr("class", "chartLine")
                     .attr("d", valueline(elemData))
 
-
             sChart.append("g")
                     .attr("transform", "translate(0," + elementHeight + ")")
                     .attr("class", "axis")
-                    .call(d3.axisBottom(x));
+                    .call(
+                        d3.axisBottom(x)
+                        .ticks(d3.timeMonth.every(6))
+                        .tickFormat(d3.timeFormat("%d %B %y")));
 
             sChart.append("g")
                     .attr("transform", "translate(0,0)")
                     .attr("class", "axis")
-                    .call(d3.axisLeft(y))
+                    .call(d3.axisLeft(y).ticks(5))
 
             sChart.append("rect")
                     .attr("class", "s-chart-cursor")
