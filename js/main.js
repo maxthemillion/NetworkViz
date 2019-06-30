@@ -773,17 +773,6 @@
             return modularityData
         }
 
-// gridlines in x axis function
-        function make_x_gridlines(x) {
-            return d3.axisBottom(x).ticks()
-        }
-
-// gridlines in y axis function
-        function make_y_gridlines(y) {
-            return d3.axisLeft(y)
-                    .ticks(5)
-        }
-
         function generateElement(dataFunc, title) {
             // set the ranges
             var elemData = dataFunc()
