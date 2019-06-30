@@ -74,8 +74,8 @@ p {
     display: none;
 }
 
-.node circle {
-    border: 1px solid white;
+.node {
+    stroke: white;
 }
 
 .node-active {

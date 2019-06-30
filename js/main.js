@@ -450,6 +450,9 @@
                 .style("fill", function (d) {
                     return groupColor(d.group)
                 })
+                .style("border-width", "3px")
+                .style("border-color", "white")
+                .style("border-style", "solid")
 
         /* define simulation steps
          * 
