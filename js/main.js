@@ -30,7 +30,6 @@
 //show all or selected link types ("All", "Quote", "Mention", "first_reply")
     var linkTypeSelected = "All"
 
-
 //set the time interval (in days) over which links are being considered
 //*caution:* changes in linkInterval will make a recalculation 
 //of groups in the network neccessary
@@ -50,7 +49,7 @@
     var maxLinkWidth = 10
 
 //set repulsion strength (<0)
-    var chargeStrength = -80
+    var chargeStrength = -100
 
 //set collision parameters
     var nodePadding = 20
@@ -59,7 +58,6 @@
 
 //set window size
     var width, height
-
     var linkedByIndex = {}
 
 //supplementary charts height
@@ -104,7 +102,6 @@
             drawChart(data)
             drawSupplementaryCharts(data)
         })
-
     }
 
     function setSize() {
@@ -711,8 +708,7 @@
     }
 
     function drawSupplementaryCharts(data) {
-
-// calculate number of nodes in network per time frame
+        // calculate number of nodes in network per time frame
         function calcNumNodes() {
             var cDate = moment(minDate)
             var numNodesData = []
@@ -833,13 +829,6 @@
                     .attr("class", "s-chart")
                     .append("g")
                     .attr("transform", "translate(0," + elementTitleHeight + ")")
-
-            // add the Y gridlines
-            sChart.append("g")
-                    .attr("class", "grid")
-                    .call(make_y_gridlines(y)
-                            .tickSize(-width + margin.left)
-                            .tickFormat(""))
 
             sChart.append("path")
                     .attr("class", "chartLine")
