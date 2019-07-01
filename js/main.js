@@ -15,9 +15,7 @@
 //        'rathena',
 //        'gatsbyjs'
 //
-
-    var project_name = "rathena"
-    
+    var project_name = "waffleio"
     var filtered = false
     
     var dataName 
@@ -60,7 +58,7 @@
     var width, height
     var linkedByIndex = {}
 
-//supplementary charts height
+//supplementary charts height #TODO: move that to css
     var elementHeight = 150
     var elementTitleHeight = 30
     var elementSpacing = 40
@@ -68,8 +66,8 @@
 //#### parameters end ###
     var chartWidth, chartHeight
     var margin
-    var wrapper = d3.select("body").append("div").attr("class", "content-wrapper")
-    var svg = wrapper.append("svg").attr("id", "graph")
+    var wrapper = d3.select("body").append("div").attr("class", "content-wrapper") //TODO: Move div to html
+    var svg = wrapper.append("svg").attr("id", "graph") //TODO: Move svg to html! why id graph not class?
     var chartLayer = svg.append("g").attr("class", "chartLayer")
     var maxDate
     var minDate
@@ -77,11 +75,25 @@
     var highlightLocked = false
     var highlightActive = false
 
-    var tooltip = d3.select("body").append("div")
+    var tooltip = d3.select("body").append("div") //TODO: attach to graph layer not to body
             .attr("class", "tooltip")
             .style("opacity", 0);
 
-// prototype function to move SVG elements to front
+    // Create a zoom behavior and set initial zoom level to 2.5
+    var zoom = d3.zoom()
+        .scaleExtent([1, 2])
+        .extent([[0, 0],[500, 800]])
+        .translateExtent([500, 800])
+
+    d3.select('svg').call(zoom.on("zoom", zoomed));
+    d3.select('svg').call(zoom).on("dblclick.zoom", null);
+    zoom.scaleTo(d3.select('svg').transition(), 1);
+
+    function zoomed () {
+        svg.attr("transform", d3.event.transform)
+    }
+
+    // prototype function to move SVG elements to front
     d3.selection.prototype.moveToFront = function () {
         return this.each(function () {
             this.parentNode.appendChild(this)
@@ -628,12 +640,9 @@
                 .links(links);
         simulation
                 .force("charge", d3.forceManyBody().strength(chargeStrength))
-
     }
 
-
     function highlight(node, link) {
-
         function activate(d, hoverNode) {
             if (!highlightLocked) {
                 highlightActive = true
@@ -671,32 +680,32 @@
         }
 
         node
-                .on("mouseover", function (d) {
-                    activate(d, this)
-                    tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                    tooltip.html(
-                            "id: " + d.name + "<br/>" + 
-                            "weight: " + d.weight + "<br/>" +
-                            "group: " + d.group)
-                            .style("left", (d3.event.pageX) + "px")
-                            .style("top", (d3.event.pageY - 28) + "px")
-                })
-                .on("mouseout", function (d) {
+            .on("mousedown", function (d) {
+                activate(d, this)
+                tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                tooltip.html(
+                        "id: " + d.name + "<br/>" + 
+                        "weight: " + d.weight + "<br/>" +
+                        "group: " + d.group)
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY - 28) + "px")
+            })
+            .on("mouseout", function (d) {
+                passivate()
+                tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+            })
+            .on("mouseup", function (d) {
+                if (!highlightLocked) {
+                    highlightLocked = true
+                } else {
+                    highlightLocked = false
                     passivate()
-                    tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                })
-                .on("mouseup", function (d) {
-                    if (!highlightLocked) {
-                        highlightLocked = true
-                    } else {
-                        highlightLocked = false
-                        passivate()
-                    }
-                })
+                }
+            })
     }
 
     function drawSupplementaryCharts(data) {
