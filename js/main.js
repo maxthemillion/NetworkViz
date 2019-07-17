@@ -409,7 +409,6 @@ class Network {
     }
 }
 
-
 class Slider {
     constructor(network, opts){
         this.network = network
@@ -630,16 +629,12 @@ class Filter{
     }
 }
 
-
 class Title{
-    constructor(opts){ 
-        this.owner = opts.owner //info[0].owner
-        this.repo = opts.repo //info[0].repo
-        this.noNodes = opts.noNodes // info[0].total_nodes
-        this.noLinks = opts.noLinks // info[0].total_links
-        this.noComments = opts.noComments // info[0].no_comments
-        this.titleString = "Communication network of project " + this.owner + " " + this.repo
+    constructor(info){ 
+        this.info = info[0]
+        this.titleString = "Communication network of project " + this.info.owner + " " + this.info.repo
 
+        this.draw()
     }
 
     draw() {
@@ -654,10 +649,10 @@ class Title{
                 .attr("y", "66%")
 
         var infoData = 
-            [this.owner + " " + this.repo + "consists of " +
-             this.noNodes + " nodes with " +
-             this.noLinks + " links. " +
-             this.noComments + " comments have been analyzed."]
+            [this.info.owner + " " + this.repo + "consists of " +
+             this.info.total_nodes + " nodes with " +
+             this.info.total_links + " links. " +
+             this.info.no_comments + " comments have been analyzed."]
 
         var infoText = d3.select("#infobox")
                 .selectAll("text")
@@ -891,7 +886,7 @@ d3.selection.prototype.moveToFront = function () {
         }
         
         // const net = new Network(opts)
-        const title = new Title(info)
+        const title = new Title(data.info)
         
     })
 
