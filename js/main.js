@@ -136,13 +136,14 @@ class Network {
     }
 
     initSimulation() {
+        var elem = this
         this.simulation = d3.forceSimulation()
         .force("link", d3.forceLink().id(function (d) {
             return d.id;
         }))
         .force(
             "collide", 
-            d3.forceCollide(function (d) {return d.r + this.forceProperties.nodePadding})
+            d3.forceCollide(function (d) {return d.r + elem.forceProperties.nodePadding})
                 .strength(this.forceProperties.collideStrength)
                 .iterations(this.forceProperties.collideIterations))
         .force(
@@ -204,7 +205,6 @@ class Network {
                     return points.map(
                         function (d) { return [d.x, d.y].join(','); })
                         .join(" ")
-
                 })
 
             selectNodes
