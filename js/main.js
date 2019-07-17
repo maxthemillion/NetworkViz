@@ -47,6 +47,9 @@ class Network {
         this.setSize()
         this.setScales()
         this.appendChartLayer()
+        this.draw()
+
+        this.setInitialPosition(allNodes);
     }
 
     setSize() {
@@ -90,6 +93,13 @@ class Network {
             .attr("class", "chartLayer")
     }
 
+    setInitialPosition(nodes) {   //TODO: adjust parameters and argument calls
+        nodes.forEach(function (d) {
+            d.x = width / 2 + (Math.random() * 100 - 50);
+            d.y = height / 2 + (Math.random() * 100 - 50);
+        });
+    }
+
     draw() {
         /* initialize data variables
          * allLinksRaw:     holds links in raw format (unaggregated with weight equal to 1)
@@ -97,7 +107,6 @@ class Network {
          * allNodes:        holds all nodes supplied with the data
          */
 
-        setInitialPosition(allNodes);
 
         var linkColor = function (d) {
             return this.linkProperties.showColor ? this.linkColorScale(d) : "grey"
@@ -302,12 +311,7 @@ class Network {
         return this.linkedByIndex[a.id + "," + b.id] === 1 || this.linkedByIndex[b.id + "," + a.id] === 1
     }
 
-    setInitialPosition(nodes) {   //TODO: adjust parameters and argument calls
-        nodes.forEach(function (d) {
-            d.x = width / 2 + (Math.random() * 100 - 50);
-            d.y = height / 2 + (Math.random() * 100 - 50);
-        });
-    }
+
 
     calculateNodeWeight(node, link) { //TODO: adjust parameters and argument calls
         node.forEach(function (d) {
