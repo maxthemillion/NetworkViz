@@ -216,7 +216,7 @@ class Network {
                 });
         }
 
-        //this.highlight(selectNodes, selectLinks)
+        this.highlight(selectNodes, selectLinks)
 
         this.simulation
             .nodes(currentNodes)
@@ -320,16 +320,17 @@ class Network {
     }
 
     highlight(node, link) {
+        var elem = this
         function activate(d, hoverNode) {
-            if (!this.highlightLocked) {
-                this.highlightActive = true
+            if (!elem.highlightLocked) {
+                elem.highlightActive = true
 
                 node.classed("node-active", function (o) {
-                    var isActive = isConnected(d, o) ? true : false;
+                    var isActive = elem.isConnected(d, o) ? true : false;
                     return isActive;
                 });
                 node.classed("node-passive", function (o) {
-                    var isPassive = isConnected(d, o) ? false : true;
+                    var isPassive = elem.isConnected(d, o) ? false : true;
                     return isPassive;
                 })
 
@@ -346,8 +347,8 @@ class Network {
         }
 
         function passivate() {
-            if (!highlightLocked) {
-                highlightActive = false
+            if (!elem.highlightLocked) {
+                elem.highlightActive = false
 
                 node.classed("node-active", false);
                 node.classed("node-passive", false)
