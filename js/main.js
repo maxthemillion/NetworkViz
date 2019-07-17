@@ -4,9 +4,11 @@ class Network {
     constructor(opts) {
         this.data = opts.data
         this.project_name = opts.project
-        this.filtered = false
         this.element = opts.element
         this.linkType = opts.linkType
+        this.filtered = false
+        this.highlightLocked = false
+        this.highlightActive = false
 
         this.nodeProperties = {
             'r_min': 6,
@@ -27,16 +29,6 @@ class Network {
             'collideIterations': 10
         }
 
-        this.nodeRadiusScale = d3.scaleLinear()
-            .domain([1, 200])
-            .range([minNodeRadius, maxNodeRadius])
-
-        this.linkWeightScale = d3.scaleLinear()
-            .domain([1, 100])
-            .range([minLinkWidth, maxLinkWidth])
-
-        this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10)
-
         this.minDate = moment(Object.keys(this.data.groups).sort()[0])
         this.maxDate = moment(
             Math.max.apply(
@@ -47,19 +39,14 @@ class Network {
             )
         );
 
-        var highlightLocked = false
-        var highlightActive = false
 
         this.f = new Filter(this.data.links, this.data.nodes)
         
         this.linkedByIndex = {}
-        this.setSize()
-    }
 
-    createChartLayer() {
-        this.chartLayer = element
-            .append("g")
-            .attr("class", "chartLayer")
+        this.setSize()
+        this.setScales()
+        this.appendChartLayer()
     }
 
     setSize() {
@@ -85,9 +72,25 @@ class Network {
             .attr("transform", "translate(" + [margin.left, margin.top] + ")")
     }
 
-    draw() {
-        var nodesSelection, linksSelection
+    setScales() {
+        this.nodeRadiusScale = d3.scaleLinear()
+            .domain([1, 200])
+            .range([minNodeRadius, maxNodeRadius])
 
+        this.linkWeightScale = d3.scaleLinear()
+            .domain([1, 100])
+            .range([minLinkWidth, maxLinkWidth])
+
+        this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10)
+    }
+
+    appendChartLayer() {
+        this.chartLayer = this.element
+            .append("g")
+            .attr("class", "chartLayer")
+    }
+
+    draw() {
         /* initialize data variables
          * allLinksRaw:     holds links in raw format (unaggregated with weight equal to 1)
          * allGroups:       holds group information supplied with the data    
