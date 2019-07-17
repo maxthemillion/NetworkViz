@@ -216,15 +216,15 @@ class Network {
                 });
         }
 
-        this.highlight(selectNodes, selectLinks)
+        //this.highlight(selectNodes, selectLinks)
 
         this.simulation
-            .nodes(selectNodes)
+            .nodes(currentNodes)
             .on("tick", ticked)
 
         this.simulation
             .force("link")
-            .links(selectLinks);
+            .links(currentLinks);
 
         this.simulation
             .force(
