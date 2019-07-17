@@ -324,6 +324,89 @@ class Network {
             }
         })
     }
+
+    highlight(node, link) {
+        function activate(d, hoverNode) {
+            if (!highlightLocked) {
+                highlightActive = true
+
+                node.classed("node-active", function (o) {
+                    var isActive = isConnected(d, o) ? true : false;
+                    return isActive;
+                });
+                node.classed("node-passive", function (o) {
+                    var isPassive = isConnected(d, o) ? false : true;
+                    return isPassive;
+                })
+
+                link.classed("link-active", function (o) {
+                    return o.source === d || o.target === d ? true : false;
+                });
+                link.classed("link-passive", function (o) {
+                    return o.source === d || o.target === d ? false : true;
+                })
+
+                d3.select(hoverNode).classed("node-active", true);
+                d3.select(hoverNode).classed("node-passive", false);
+            }
+        }
+
+        function passivate() {
+            if (!highlightLocked) {
+                highlightActive = false
+
+                node.classed("node-active", false);
+                node.classed("node-passive", false)
+                link.classed("link-active", false);
+                link.classed("link-passive", false);
+            }
+        }
+
+        node.on("mouseover", function (d) {
+                    activate(d, this)
+                    tooltip.transition()
+                            .duration(200)
+                            .style("opacity", .9);
+                    tooltip.html(
+                            "id: " + d.name + "<br/>" + 
+                            "weight: " + d.weight + "<br/>" +
+                            "group: " + d.group)
+                            .style("left", (d3.event.pageX) + "px")
+                            .style("top", (d3.event.pageY - 28) + "px")
+                })
+                .on("mouseout", function (d) {
+                    passivate()
+                    tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
+                })
+                .on("mouseup", function (d) {
+                    if (!highlightLocked) {
+                        highlightLocked = true
+                    } else {
+                        highlightLocked = false
+                        passivate()
+                    }
+                })
+    }
+
+    assignGroups(nodes, groups) {
+
+        if (groups !== undefined) {
+            var node_ids = Object.keys(groups)
+
+            node_ids.forEach(function (d) {
+                var _d = +d
+                var nextNode = nodes.find(x => x.id === _d)
+                if (nextNode !== undefined) {
+                    nextNode.group = groups[d]
+                } else {
+                    console.log("node not found. id: " + d)
+                }
+            })
+        }
+        return nodes
+    }
 }
 
 
@@ -465,6 +548,24 @@ class Filter{
         return this.links
     }
 
+    filterGroups(allGroups, date) {
+        //var dstring = date.format("YYYY-MM-DD")
+        var dstring = date.format("YYYY-MM-DD")
+        var res = allGroups[dstring]
+
+        if (res === undefined) {
+            dstring = moment(date).add(1, "day").format("YYYY-MM-DD")
+            res = allGroups[dstring]
+        }
+
+        if (res === undefined) {
+            dstring = moment(date).subtract(1, "day").format("YYYY-MM-DD")
+            res = allGroups[dstring]
+        }
+
+        return res
+    }
+
     _forDate(date) {
         date = moment(date);
         var minDate = moment(date).subtract(linkInterval, "days");
@@ -531,11 +632,48 @@ class Filter{
 
 
 class Title{
-    constructor(opts){
+    constructor(opts){ 
+        this.owner = opts.owner //info[0].owner
+        this.repo = opts.repo //info[0].repo
+        this.noNodes = opts.noNodes // info[0].total_nodes
+        this.noLinks = opts.noLinks // info[0].total_links
+        this.noComments = opts.noComments // info[0].no_comments
+        this.titleString = "Communication network of project " + this.owner + " " + this.repo
 
     }
-}
 
+    draw() {
+        var title = d3.select("#title")
+                .selectAll("text")
+                .data([this.titleString])
+                .enter()
+                .append("h1")
+
+        title.text(function (d) {return d;})
+                .attr("x", "10%")
+                .attr("y", "66%")
+
+        var infoData = 
+            [this.owner + " " + this.repo + "consists of " +
+             this.noNodes + " nodes with " +
+             this.noLinks + " links. " +
+             this.noComments + " comments have been analyzed."]
+
+        var infoText = d3.select("#infobox")
+                .selectAll("text")
+                .data(infoData)
+                .enter()
+                .append("p")
+                .attr("class", "infobox-text")
+
+        infoText
+                .text(function (d) {
+                    return d;
+                })
+                .attr("x", "20%")
+                .attr("y", "66%")
+    }
+}
 
 class Tooltip{
     constructor(element){
@@ -557,217 +695,12 @@ class Tooltip{
 
 class InfoChart{
     constructor(opts){
-
-        var elementHeight = 150
-        var elementTitleHeight = 30
-        var elementSpacing = 40
-    
-    }
-}
-
-
-// prototype function to move SVG elements to front
-d3.selection.prototype.moveToFront = function () {
-    return this.each(function () {
-        this.parentNode.appendChild(this)
-    })
-}
-
-
-!(function main() {
-
-    //#### parameters Start ####
-    //
-    //        'OneDrive',
-    //        'waffleio',
-    //        'getnikola',
-    //        'Tribler',
-    //        'BobPalmer',
-    //        'novus',
-    //        'rathena',
-    //        'gatsbyjs'
-    //
-    var project_name = "rathena"
-    var dataName = "data/viz_" + project_name + ".json"
-    const wrapper = d3.select("body").append("div").attr("class", "content-wrapper")
-    const svg = wrapper.append("svg").attr("id", "graph")
-    const slider = wrapper.append("div").attr("class", "slider")
-
-    d3.json(dataName, function (data) {
-
-        data = parseDateStrings(data)
-        data = castIntegers(data)
-
-        var opts = {
-            'data': data,
-            'element': svg,
-            'linkTypeSelected': 'all',
-            'linkInterval': 30,
-            'sliderInterval': 'week',
-            'showGroupColor': true,
-            'showLinkColor': true,
-        }
-
-        const net = new Network(opts)
-
-        setSize()
-
-    })
-
-    function parseDateStrings(data) {
-        data.links.forEach(function (d) {
-            d.timestamp = moment(d.timestamp);
-        })
-        return data;
+        this.elementHeight = 150
+        this.elementTitleHeight = 30
+        this.elementSpacing = 40
     }
 
-    function castIntegers(data) {
-        data.nodes.forEach(function (d) {
-            d.id = +d.id
-        })
-        data.links.forEach(function (d) {
-            d.source = +d.source
-            d.target = +d.target
-        })
-        return data
-    }
-
-})();
-
-
-
-!(function () {
-
-
-
-    function filterGroups(allGroups, date) {
-        //var dstring = date.format("YYYY-MM-DD")
-        var dstring = date.format("YYYY-MM-DD")
-        var res = allGroups[dstring]
-
-        if (res === undefined) {
-            dstring = moment(date).add(1, "day").format("YYYY-MM-DD")
-            res = allGroups[dstring]
-        }
-
-        if (res === undefined) {
-            dstring = moment(date).subtract(1, "day").format("YYYY-MM-DD")
-            res = allGroups[dstring]
-        }
-
-
-        return res
-    }
-
-    function assignGroups(nodes, groups) {
-
-        if (groups !== undefined) {
-            var node_ids = Object.keys(groups)
-
-            node_ids.forEach(function (d) {
-                var _d = +d
-                var nextNode = nodes.find(x => x.id === _d)
-                if (nextNode !== undefined) {
-                    nextNode.group = groups[d]
-                } else {
-                    console.log("node not found. id: " + d)
-                }
-            })
-        }
-        return nodes
-    }
-
-    function drawTitle(info) {
-        var titleString = "Communication network of project " + info[0].owner + " " + info[0].repo
-        var titleData = [titleString]
-
-        var title = d3.select("#title")
-                .selectAll("text")
-                .data(titleData)
-                .enter()
-                .append("h1")
-
-        title
-                .text(function (d) {
-                    return d;
-                })
-                .attr("x", "10%")
-                .attr("y", "66%")
-    }
-
-    function drawChart(data) {
-        
-    }
-
-
-    function highlight(node, link) {
-
-        function activate(d, hoverNode) {
-            if (!highlightLocked) {
-                highlightActive = true
-
-                node.classed("node-active", function (o) {
-                    var isActive = isConnected(d, o) ? true : false;
-                    return isActive;
-                });
-                node.classed("node-passive", function (o) {
-                    var isPassive = isConnected(d, o) ? false : true;
-                    return isPassive;
-                })
-
-                link.classed("link-active", function (o) {
-                    return o.source === d || o.target === d ? true : false;
-                });
-                link.classed("link-passive", function (o) {
-                    return o.source === d || o.target === d ? false : true;
-                })
-
-                d3.select(hoverNode).classed("node-active", true);
-                d3.select(hoverNode).classed("node-passive", false);
-            }
-        }
-
-        function passivate() {
-            if (!highlightLocked) {
-                highlightActive = false
-
-                node.classed("node-active", false);
-                node.classed("node-passive", false)
-                link.classed("link-active", false);
-                link.classed("link-passive", false);
-            }
-        }
-
-        node
-                .on("mouseover", function (d) {
-                    activate(d, this)
-                    tooltip.transition()
-                            .duration(200)
-                            .style("opacity", .9);
-                    tooltip.html(
-                            "id: " + d.name + "<br/>" + 
-                            "weight: " + d.weight + "<br/>" +
-                            "group: " + d.group)
-                            .style("left", (d3.event.pageX) + "px")
-                            .style("top", (d3.event.pageY - 28) + "px")
-                })
-                .on("mouseout", function (d) {
-                    passivate()
-                    tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                })
-                .on("mouseup", function (d) {
-                    if (!highlightLocked) {
-                        highlightLocked = true
-                    } else {
-                        highlightLocked = false
-                        passivate()
-                    }
-                })
-    }
-
-    function drawSupplementaryCharts(data) {
+    draw(data) {
         // calculate number of nodes in network per time frame
         function calcNumNodes() {
             var cDate = moment(minDate)
@@ -912,30 +845,74 @@ d3.selection.prototype.moveToFront = function () {
         generateElement(readModularity, "Modularity")
 
     }
+    
+}
 
-    function drawInfoBox(info) {
-        var infoData = 
-            [info[0].owner + " " + info[0].repo + "consists of " +
-            info[0].total_nodes + " nodes with " +
-            info[0].total_links + " links. " +
-            info[0].no_comments + " comments have been analyzed."]
+// prototype function to move SVG elements to front
+d3.selection.prototype.moveToFront = function () {
+    return this.each(function () {
+        this.parentNode.appendChild(this)
+    })
+}
 
-        var infoText = d3.select("#infobox")
-                .selectAll("text")
-                .data(infoData)
-                .enter()
-                .append("p")
-                .attr("class", "infobox-text")
 
-        infoText
-                .text(function (d) {
-                    return d;
-                })
-                .attr("x", "20%")
-                .attr("y", "66%")
+!(function main() {
+
+    //#### parameters Start ####
+    //
+    //        'OneDrive',
+    //        'waffleio',
+    //        'getnikola',
+    //        'Tribler',
+    //        'BobPalmer',
+    //        'novus',
+    //        'rathena',
+    //        'gatsbyjs'
+    //
+    var project_name = "rathena"
+    var dataName = "data/viz_" + project_name + ".json"
+    const wrapper = d3.select("body").append("div").attr("class", "content-wrapper")
+    const svg = wrapper.append("svg").attr("id", "graph")
+    const slider = wrapper.append("div").attr("class", "slider")
+
+    d3.json(dataName, function (data) {
+
+        data = parseDateStrings(data)
+        data = castIntegers(data)
+
+        var opts = {
+            'data': data,
+            'element': svg,
+            'linkTypeSelected': 'all',
+            'linkInterval': 30,
+            'sliderInterval': 'week',
+            'showGroupColor': true,
+            'showLinkColor': true,
+        }
+        
+        // const net = new Network(opts)
+        const title = new Title(info)
+        
+    })
+
+    function parseDateStrings(data) {
+        data.links.forEach(function (d) {
+            d.timestamp = moment(d.timestamp);
+        })
+        return data;
     }
 
-    main()
+    function castIntegers(data) {
+        data.nodes.forEach(function (d) {
+            d.id = +d.id
+        })
+        data.links.forEach(function (d) {
+            d.source = +d.source
+            d.target = +d.target
+        })
+        return data
+    }
 
-}());
+})();
+
 
