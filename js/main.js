@@ -34,7 +34,7 @@ class Network {
             'collideIterations': 10
         }
 
-        this.f = new Filter(this.links, this.nodes, this.linkProperties.showColor)
+        this.f = new Filter(this.linkProperties.showColor)
         
         this.linkedByIndex = {}
 
@@ -501,7 +501,7 @@ class Slider {
 }
 
 class Filter{
-    constructor(linkInterval, showLinkColor){
+    constructor(showLinkColor){
         this.linkInterval = 30
         this.showLinkColor = showLinkColor // TODO: missplaced attribute. move to better fit.
     }
@@ -684,7 +684,6 @@ class Tooltip{
         this.style('opacity', 0)
     }
 }
-
 
 class InfoChart{
     constructor(opts){
