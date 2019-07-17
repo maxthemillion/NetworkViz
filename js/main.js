@@ -92,6 +92,8 @@ class Network {
             .range([this.linkProperties.width_min, this.linkProperties.width_max])
 
         this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10)
+        this.groupColorScale = d3.scaleOrdinal(d3.schemeCategory20)
+
     }
 
     appendChartLayer() {
@@ -195,8 +197,8 @@ class Network {
             selectLinks
                 .attr("points", function (d) {
                     var points = [
-                        { 'x': d.source.x + this.linkWeightScale(d.weight) / 2, 'y': d.source.y },
-                        { 'x': d.source.x - this.linkWeightScale(d.weight) / 2, 'y': d.source.y },
+                        { 'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y },
+                        { 'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y },
                         { 'x': d.target.x, 'y': d.target.y }]
 
                     return points.map(
@@ -319,8 +321,8 @@ class Network {
 
     highlight(node, link) {
         function activate(d, hoverNode) {
-            if (!highlightLocked) {
-                highlightActive = true
+            if (!this.highlightLocked) {
+                this.highlightActive = true
 
                 node.classed("node-active", function (o) {
                     var isActive = isConnected(d, o) ? true : false;
