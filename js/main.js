@@ -56,7 +56,6 @@ class Network {
         this.initNodePositions()
 
         this.draw()
-
     }
 
     setSize() {
@@ -102,7 +101,7 @@ class Network {
             .attr("class", "chartLayer")
     }
 
-    initNodePositions() {   //TODO: adjust parameters and argument calls
+    initNodePositions() {
         var elem = this
         this.nodes.forEach(function (d) {
             d.x = elem.clientWidth / 2 + (Math.random() * 100 - 50);
