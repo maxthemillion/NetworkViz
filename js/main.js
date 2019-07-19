@@ -16,6 +16,8 @@ class Network {
     this.highlightLocked = false;
     this.highlightActive = false;
 
+    this.discreteInterval = 'week';
+
     this.nodeProperties = {
       'r_min': 6,
       'r_max': 100,
@@ -129,7 +131,7 @@ class Network {
         )
     );
     this.oldDate = moment(this.minDate);
-    this.oldDate.startOf(this.sliderInterval);
+    this.oldDate.startOf(this.discreteInterval);
 
     this.offset = this.minDate.diff(this.oldDate, 'days');
   }
@@ -484,13 +486,12 @@ class Slider {
 
           value = Math.round(value);
 
-          const newDate = moment(value).startOf(elem.sliderInterval);
+          const newDate = moment(value).startOf(elem.network.discreteInterval);
           if (!newDate.isSame(elem.oldDate)) {
             elem.oldDate = moment(newDate);
             elem.network.update(newDate);
           }
 
-          // TODO: what happened to elem.sliderInterval. Not defined.
           // TODO: where has this code part gone?
           // TODO: call update function on network!
           // TODO: do something in case the date has been changed!
@@ -703,7 +704,7 @@ class InfoChart {
         const linkSelection = filterAndConsolidate(data.links, cDate, linkTypeSelected); // function is only defined inside class Network.
         const nodeSelection = filterNodes(data.nodes, linkSelection);
         numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
-        cDate.add(1, sliderInterval);
+        cDate.add(1, sliderInterval); // TODO: sliderinterval only exists as discreteInterval within network class
       }
 
       return numNodesData;
@@ -870,7 +871,6 @@ d3.selection.prototype.moveToFront = function() {
     const netOpts = {
       'svg': svg,
       'linkType': 'all',
-      'sliderInterval': 'week',
       'showGroupColor': true,
       'showLinkColor': false,
     };
