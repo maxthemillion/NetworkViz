@@ -408,12 +408,12 @@ class Network {
 }
 
 class Slider {
-  constructor(network, opts) {
+  constructor(network) {
     this.network = network;
 
-    this.width = opts.width;
-    this.minDate = opts.minDate;
-    this.maxDate = opts.maxDate;
+    this.width = network.ChartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
+    this.minDate = network.minDate;
+    this.maxDate = network.maxDate;
 
     this.sliderTimeScale = d3.scaleTime()
         .range([0, this.width])
@@ -425,6 +425,9 @@ class Slider {
         .clamp(true);
 
     this.select = {};
+
+    this.setStyle();
+    this.dispatchEvents();
 
     this.setStyle();
     this.dispatchEvents();
@@ -867,17 +870,17 @@ d3.selection.prototype.moveToFront = function() {
     data = parseDateStrings(data);
     data = castIntegers(data);
 
-    const opts = {
+    const netOpts = {
       'svg': svg,
       'linkType': 'all',
       'sliderInterval': 'week',
       'showGroupColor': true,
-      'showLinkColor': true,
+      'showLinkColor': false,
     };
 
-    // const net = new Network(opts)
     const title = new Title(data.info);
-    const net = new Network(data, opts);
+    const net = new Network(data, netOpts);
+    const slider = new Slider(net);
   });
 
   function parseDateStrings(data) {
