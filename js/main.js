@@ -251,7 +251,7 @@ class Network {
     currentNodes = this.reassignGroups(currentNodes, groups);
 
     // node enter update exit
-    let selectNodes = svg.selectAll('.node')
+    let selectNodes = this.svg.selectAll('.node')
         .data(currentNodes, function(d) {
           return d.id;
         });
@@ -273,7 +273,7 @@ class Network {
         });
 
     // Link enter update exit
-    const selectLinks = svg.selectAll('.link')
+    let selectLinks = this.svg.selectAll('.link')
         .data(currentLinks, function(d) {
           return d.link_id;
         });
@@ -295,8 +295,8 @@ class Network {
       d3.select(elem).moveToFront();
     });
 
-    this.simulation.nodes(nodesSelection);
-    this.simulation.force('link').links(linksSelection);
+    this.simulation.nodes(selectNodes);
+    this.simulation.force('link').links(selectLinks);
     this.simulation.alpha(1).restart();
   }
 
@@ -413,7 +413,7 @@ class Slider {
   constructor(network) {
     this.network = network;
 
-    this.width = this.network.ChartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
+    this.width = this.network.chartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
     this.minDate = this.network.minDate;
     this.maxDate = this.network.maxDate;
 
@@ -421,7 +421,7 @@ class Slider {
         .range([0, this.width])
         .domain([this.minDate, this.maxDate]);
 
-    this.scale = d3.scaleLinear()
+    this.sliderScale = d3.scaleLinear()
         .domain([this.minDate, this.maxDate])
         .range([0, this.width])
         .clamp(true);
@@ -495,10 +495,10 @@ class Slider {
           // TODO: where has this code part gone?
           // TODO: call update function on network!
           // TODO: do something in case the date has been changed!
-        })
-        .on('sliderEnd', function() {
-          highlight(node, link);
         });
+        // .on('sliderEnd', function() {
+        //  elem.network.highlight(node, link);
+        // });
   }
 }
 
