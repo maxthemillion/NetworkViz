@@ -476,7 +476,7 @@ class Slider {
 
     this.dispatch
         .on('sliderChange', function() {
-          let value = elem.sliderScale.invert(d3.mouse(sliderTray.node())[0]);
+          let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
           elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
 
           d3.selectAll('.s-chart-cursor')
@@ -484,16 +484,16 @@ class Slider {
 
           value = Math.round(value);
 
-          const newDate = moment(value).startOf(sliderInterval);
+          const newDate = moment(value).startOf(elem.sliderInterval);
           if (!newDate.isSame(elem.oldDate)) {
             elem.oldDate = moment(newDate);
             elem.network.update(newDate);
           }
 
-          // call update function on network
-
-
-        // do something in case the date has been changed
+          // TODO: what happened to elem.sliderInterval. Not defined.
+          // TODO: where has this code part gone?
+          // TODO: call update function on network!
+          // TODO: do something in case the date has been changed!
         })
         .on('sliderEnd', function() {
           highlight(node, link);
@@ -861,7 +861,7 @@ d3.selection.prototype.moveToFront = function() {
   const dataName = 'data/viz_' + projectName + '.json';
   const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
   const svg = wrapper.append('svg').attr('id', 'graph');
-  // const slider = wrapper.append('div').attr('class', 'slider');
+  wrapper.append('div').attr('class', 'slider');
 
   d3.json(dataName, function(data) {
     data = parseDateStrings(data);
