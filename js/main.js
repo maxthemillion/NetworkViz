@@ -324,6 +324,7 @@ class Network {
 
   highlight(node, link) {
     const elem = this;
+
     function activate(d, hoverNode) {
       if (!elem.highlightLocked) {
         elem.highlightActive = true;
