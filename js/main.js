@@ -362,7 +362,7 @@ class Network {
     }
 
     node.on('mouseover', function(d) {
-      activate(d, elem);
+      activate(d, this);
       tooltip.transition()
           .duration(200)
           .style('opacity', .9);
