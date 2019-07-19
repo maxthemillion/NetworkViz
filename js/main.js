@@ -411,9 +411,9 @@ class Slider {
   constructor(network) {
     this.network = network;
 
-    this.width = network.ChartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
-    this.minDate = network.minDate;
-    this.maxDate = network.maxDate;
+    this.width = this.network.ChartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
+    this.minDate = this.network.minDate;
+    this.maxDate = this.network.maxDate;
 
     this.sliderTimeScale = d3.scaleTime()
         .range([0, this.width])
@@ -425,9 +425,6 @@ class Slider {
         .clamp(true);
 
     this.select = {};
-
-    this.setStyle();
-    this.dispatchEvents();
 
     this.setStyle();
     this.dispatchEvents();
