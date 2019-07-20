@@ -8,6 +8,10 @@ class Network {
     this.groups = data.groups;
     this.nodes = data.nodes;
 
+    this.data = data
+    this.current = {}
+    this.select = {}
+
     this.projectName = opts.project;
     this.svg = opts.svg;
     this.linkType = opts.linkType;
@@ -130,10 +134,11 @@ class Network {
             })
         )
     );
+
     this.oldDate = moment(this.minDate);
     this.oldDate.startOf(this.discreteInterval);
 
-    this.offset = this.minDate.diff(this.oldDate, 'days');
+    this.offset = this.minDate.diff(this.oldDate, 'days'); //negative
   }
 
   initSimulation() {
@@ -165,40 +170,67 @@ class Network {
   }
 
   draw() {
-    const currentLinks = this.f.filterLinks(this.minDate, this.linkType, this.links);
+    this.update(this.oldDate)
+    this.highlight(this.select.nodes, this.select.links);
+  }
 
-    this.updateLinkedByIndex(currentLinks);
-    this.calculateNodeWeight(this.nodes, currentLinks);
+  update(newDate){
+    newDate = newDate.add(this.offset, 'days');
+    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
 
-    let currentNodes = this.f.filterNodes(this.nodes, currentLinks);
-    const currentGroups = this.f.filterGroups(this.groups, this.minDate);
+    this.updateLinkedByIndex(this.current.links);
+    this.calculateNodeWeight(this.data.nodes, this.current.links);
 
-    currentNodes = this.reassignGroups(currentNodes, currentGroups);
+    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
+    this.current.groups = this.f.filterGroups(this.data.groups, newDate);
 
+    this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
+
+    // node update
+    this.select.nodes = this.svg.selectAll('.node')
+      .data(this.current.nodes, function(d) {
+        return d.id;
+      });
+
+    // node exit selection
+    this.select.nodes.exit()
+      .remove();
+
+    // node enter selection
     const elem = this;
-    const selectLinks = this.svg.selectAll('polygon')
-        .data(currentLinks)
-        .enter()
-        .append('polygon')
-        .attr('class', 'link')
-        .style('fill', function(d) {
-          return elem.getLinkColor(d.rel_type);
-        });
+    this.select.nodes.enter()
+      .append('circle')
+      .attr('class', 'node')
+      .merge(this.select.nodes)
+      .attr('r', function(d) {
+        return elem.nodeRadiusScale(d.weight);
+      })
+      .style('fill', function(d) {
+        return elem.getGroupColor(d.group);
+      });
 
-    const selectNodes = this.svg.selectAll('circle')
-        .data(currentNodes)
-        .enter()
-        .append('circle')
-        .attr('class', 'node')
-        .attr('r', function(d) {
-          return elem.nodeRadiusScale(d.weight);
-        })
-        .style('fill', function(d) {
-          return elem.getGroupColor(d.group);
-        });
+
+    // link update
+    this.select.links = this.svg.selectAll('.link')
+      .data(this.current.links, function(d) {
+        return d.link_id;
+      });
+
+    // link exit selection 
+    this.select.links.exit()
+      .remove()
+
+    // link enter selection
+    this.select.links.enter()        
+      .append('polygon')
+      .attr('class', 'link')
+      .merge(this.select.links)
+      .style('fill', function(d) {
+        return elem.getLinkColor(d.rel_type);
+      });
 
     const ticked = function() {
-      selectLinks
+      d3.selectAll('link')
           .attr('points', function(d) {
             const points = [
               {'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
@@ -211,91 +243,27 @@ class Network {
                 })
                 .join(' ');
           });
-
-      selectNodes
-          .attr('cx', function(d) {
-            return d.x;
-          })
-          .attr('cy', function(d) {
-            return d.y;
-          });
-    };
-
-    this.highlight(selectNodes, selectLinks);
-
-    this.simulation
-        .nodes(currentNodes)
-        .on('tick', ticked);
-
-    this.simulation
-        .force('link')
-        .links(currentLinks);
-
-    this.simulation
-        .force(
-            'charge',
-            d3.forceManyBody().strength(this.forceProperties.chargeStrength)); // TODO: also contained in initSimulation. Required?
-  }
-
-  update(newDate) {
-    newDate = newDate.add(this.offset, 'days');
-    const currentLinks = this.f.filterLinks(newDate, this.linkType, this.links);
-
-    this.updateLinkedByIndex(currentLinks);
-    this.calculateNodeWeight(this.nodes, currentLinks);
-
-    let currentNodes = this.f.filterNodes(this.nodes, currentLinks);
-    const currentGroups = this.f.filterGroups(this.groups, newDate);
-
-    currentNodes = this.reassignGroups(currentNodes, currentGroups);
-
-    // node update
-    let selectNodes = this.svg.selectAll('.node')
-        .data(currentNodes, function(d) {
-          return d.id;
-        });
-
-    // Node exit
-    selectNodes.exit()
-        .remove();
-
-    const elem = this;
-    selectNodes = selectNodes.enter()
-        .append('circle')
-        .attr('class', 'node')
-        .merge(selectNodes)
-        .attr('r', function(d) {
-          return elem.nodeRadiusScale(d.weight);
+  
+      d3.selectAll('.node')
+        .attr('cx', function(d) {
+          return d.x;
         })
-        .style('fill', function(d) {
-          return elem.getGroupColor(d.group);
-        });
-
-    // Link enter update exit
-    let selectLinks = this.svg.selectAll('.link')
-        .data(currentLinks, function(d) {
-          return d.link_id;
-        });
-
-    selectLinks.exit()
-        .remove();
-
-    selectLinks = selectLinks.enter()
-        .append('polygon')
-        .attr('class', 'link')
-        .merge(selectLinks)
-        .style('fill', function(d) {
-          return elem.getLinkColor(d.rel_type);
-        });
-
-    d3.selectAll('.link').size(); // TODO: required?
-
-    selectNodes.each(function() {
+        .attr('cy', function(d) {
+          return d.y;
+        });    
+    };
+    
+    this.select.nodes.each(function() {
       d3.select(this).moveToFront();
     });
 
-    this.simulation.nodes(selectNodes);
-    this.simulation.force('link').links(selectLinks);
+    this.simulation.nodes(this.select.nodes)
+    this.simulation.force(
+      'link',
+      d3.forceLink(this.current.links).id(function (d) {
+        return d.id;
+      }))
+    this.simulation.on('tick', ticked);
     this.simulation.alpha(1).restart();
   }
 
