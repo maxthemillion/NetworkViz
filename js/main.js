@@ -204,6 +204,10 @@ class Network {
               {'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
               {'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
               {'x': d.target.x, 'y': d.target.y}];
+      
+            if (points[0].x === NaN) {
+              console.log('error');
+            }
 
             return points.map(
                 function(d) {
@@ -292,7 +296,7 @@ class Network {
     d3.selectAll('.link').size(); // TODO: required?
 
     selectNodes.each(function() {
-      d3.select(elem).moveToFront();
+      d3.select(this).moveToFront();
     });
 
     this.simulation.nodes(selectNodes);
@@ -840,8 +844,7 @@ class InfoChart {
 // prototype function to move SVG elements to front
 // TODO: move this to where it fits. not in global scope.
 d3.selection.prototype.moveToFront = function() {
-  return this.each(function() {
-    this.parentNode.appendChild(this);
+  return this.each(function() {//    this.parentNode.appendChild(this);
   });
 };
 
