@@ -205,10 +205,6 @@ class Network {
               {'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
               {'x': d.target.x, 'y': d.target.y}];
       
-            if (points[0].x === NaN) {
-              console.log('error');
-            }
-
             return points.map(
                 function(d) {
                   return [d.x, d.y].join(',');
@@ -243,18 +239,17 @@ class Network {
 
   update(newDate) {
     newDate = newDate.add(this.offset, 'days');
-
     const currentLinks = this.f.filterLinks(newDate, this.linkType, this.links);
+
     this.updateLinkedByIndex(currentLinks);
-
-    let currentNodes = this.f.filterNodes(this.nodes, currentLinks);
-
     this.calculateNodeWeight(this.nodes, currentLinks);
 
-    const groups = this.f.filterGroups(this.groups, newDate);
-    currentNodes = this.reassignGroups(currentNodes, groups);
+    let currentNodes = this.f.filterNodes(this.nodes, currentLinks);
+    const currentGroups = this.f.filterGroups(this.groups, newDate);
 
-    // node enter update exit
+    currentNodes = this.reassignGroups(currentNodes, currentGroups);
+
+    // node update
     let selectNodes = this.svg.selectAll('.node')
         .data(currentNodes, function(d) {
           return d.id;
