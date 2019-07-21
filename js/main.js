@@ -35,7 +35,7 @@ class Network {
     };
 
     this.forceProperties = {
-      'chargeStrength': -200,
+      'chargeStrength': -500,
       'nodePadding': 20,
       'collideStrength': 0.7,
       'collideIterations': 3,
@@ -176,6 +176,9 @@ class Network {
     this.updateLinkedByIndex(this.current.links);
     this.calculateNodeWeight(this.data.nodes, this.current.links);
     this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
+    this.current.groups = this.f.filterGroups(this.groups, newDate);
+    this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
+
 
     // link update
     this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
@@ -379,7 +382,7 @@ class Slider {
 
   setStyle() {
     this.select.slider = d3.select('.slider')
-        .style('width', this.sliderWidth + 'px')
+        .style('width', this.width + 'px')
         .style('height', '30px');
     //            .style("margin-left", margin.left + "px")
     this.select.sliderTray = this.select.slider.append('div')
