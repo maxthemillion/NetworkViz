@@ -38,7 +38,7 @@ class Network {
       'chargeStrength': -200,
       'nodePadding': 20,
       'collideStrength': 0.7,
-      'collideIterations': 10,
+      'collideIterations': 3,
     };
 
     this.f = new Filter(this.linkProperties.showColor);
@@ -141,18 +141,7 @@ class Network {
   }
 
   draw() {
-  
-    this.update(this.oldDate)
-    //this.highlight(this.select.nodes, this.select.links);
-  }
-
-  update(newDate) {
-    newDate = newDate.add(this.offset, 'days');
-    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
-    this.updateLinkedByIndex(this.current.links);
-    this.calculateNodeWeight(this.data.nodes, this.current.links);
-    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
-
+    const elem = this
     // define simulation
     this.simulation = d3.forceSimulation()
       .force('y',
@@ -175,6 +164,18 @@ class Network {
     
     this.simulation.alphaMin(0.01)
     this.simulation.stop()
+
+  
+    this.update(this.oldDate)
+    //this.highlight(this.select.nodes, this.select.links);
+  }
+
+  update(newDate) {
+    newDate = newDate.add(this.offset, 'days');
+    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
+    this.updateLinkedByIndex(this.current.links);
+    this.calculateNodeWeight(this.data.nodes, this.current.links);
+    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
 
     // link update
     this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
@@ -271,7 +272,6 @@ class Network {
 
   highlight(node, link) {
     const elem = this;
-
     function activate(d, hoverNode) {
       if (!elem.highlightLocked) {
         elem.highlightActive = true;
