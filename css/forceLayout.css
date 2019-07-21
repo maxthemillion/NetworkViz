@@ -47,7 +47,7 @@ p {
 }
 
 
-.link {
+.linkPolygon {
     opacity: 0.3;
 }
 
@@ -65,7 +65,7 @@ p {
     display: none;
 }
 
-.node {
+.nodeCircle {
     stroke: white;
 }
 
