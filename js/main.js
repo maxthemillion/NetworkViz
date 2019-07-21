@@ -172,6 +172,8 @@ class Network {
         })
           .strength(this.forceProperties.collideStrength)
           .iterations(this.forceProperties.collideIterations))
+    
+    this.simulation.alphaMin(0.01)
     this.simulation.stop()
 
     // link update
@@ -238,10 +240,6 @@ class Network {
           return d.y;
         });
     }
-
-    this.select.nodeCircles.each(function() {
-      d3.select(this).moveToFront();
-    });
 
     this.simulation.on('tick', ticked)
     this.simulation.alpha(1).restart()
@@ -550,6 +548,11 @@ class Slider {
             elem.oldDate = moment(newDate);
             elem.network.update(newDate);
           }
+
+          d3.selectAll('.nodeCircle').each(function() {
+            d3.select(this).moveToFront();
+          });
+
 
           // TODO: where has this code part gone?
           // TODO: call update function on network!
@@ -899,7 +902,8 @@ class InfoChart {
 // prototype function to move SVG elements to front
 // TODO: move this to where it fits. not in global scope.
 d3.selection.prototype.moveToFront = function() {
-  return this.each(function() {//    this.parentNode.appendChild(this);
+  return this.each(function() { 
+    this.parentNode.appendChild(this);
   });
 };
 
