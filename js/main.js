@@ -8,9 +8,9 @@ class Network {
     this.groups = data.groups;
     this.nodes = data.nodes;
 
-    this.data = data
-    this.current = {}
-    this.select = {}
+    this.data = data;
+    this.current = {};
+    this.select = {};
 
     this.projectName = opts.project;
     this.svg = opts.svg;
@@ -137,37 +137,37 @@ class Network {
     this.oldDate = moment(this.minDate);
     this.oldDate.startOf(this.discreteInterval);
 
-    this.offset = this.minDate.diff(this.oldDate, 'days'); //negative
+    this.offset = this.minDate.diff(this.oldDate, 'days'); // negative
   }
 
   draw() {
-    const elem = this
+    const elem = this;
     // define simulation
     this.simulation = d3.forceSimulation()
-      .force('y',
-        d3.forceX(this.chartWidth / 2).strength(0.4))
-      .force('x',
-        d3.forceY(this.chartHeight / 2).strength(0.6))
-      .force("charge", d3.forceManyBody().strength(this.forceProperties.chargeStrength))
-      .force('link',
-        d3.forceLink().id(
-          function (d) {
-            return d.id;
-          }))
-      .force(
-        'collide',
-        d3.forceCollide(function (d) {
-          return d.r + elem.forceProperties.nodePadding;
-        })
-          .strength(this.forceProperties.collideStrength)
-          .iterations(this.forceProperties.collideIterations))
-    
-    this.simulation.alphaMin(0.01)
-    this.simulation.stop()
+        .force('y',
+            d3.forceX(this.chartWidth / 2).strength(0.4))
+        .force('x',
+            d3.forceY(this.chartHeight / 2).strength(0.6))
+        .force('charge', d3.forceManyBody().strength(this.forceProperties.chargeStrength))
+        .force('link',
+            d3.forceLink().id(
+                function(d) {
+                  return d.id;
+                }))
+        .force(
+            'collide',
+            d3.forceCollide(function(d) {
+              return d.r + elem.forceProperties.nodePadding;
+            })
+                .strength(this.forceProperties.collideStrength)
+                .iterations(this.forceProperties.collideIterations));
 
-  
-    this.update(this.oldDate)
-    //this.highlight(this.select.nodes, this.select.links);
+    this.simulation.alphaMin(0.01);
+    this.simulation.stop();
+
+
+    this.update(this.oldDate);
+    // this.highlight(this.select.nodes, this.select.links);
   }
 
   update(newDate) {
@@ -182,71 +182,71 @@ class Network {
 
     // link update
     this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
-      .data(this.current.links, function(d) {
-        return d.link_id;
-      });
+        .data(this.current.links, function(d) {
+          return d.link_id;
+        });
 
-    // link exit selection 
+    // link exit selection
     this.select.linkPolygons.exit()
-      .remove()
+        .remove();
 
     // link enter selection
     this.select.linkPolygons.enter()
-      .append('polygon')
-      .attr('class', 'linkPolygon')
+        .append('polygon')
+        .attr('class', 'linkPolygon');
 
     // node update
     this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
-      .data(this.current.nodes, function(d) {
-        return d.id;
-      });
+        .data(this.current.nodes, function(d) {
+          return d.id;
+        });
 
     // node exit selection
     this.select.nodeCircles.exit()
-      .remove();
+        .remove();
 
     // node enter selection
     const elem = this;
     this.select.nodeCircles.enter()
-      .append('circle')
-      .attr('class', 'nodeCircle')
-      .merge(this.select.nodeCircles)
-      .attr('r', function (d) {
-        return elem.nodeRadiusScale(d.weight);
-      })
-      .style('fill', function (d) {
-        return elem.getGroupColor(d.group);
-      });
+        .append('circle')
+        .attr('class', 'nodeCircle')
+        .merge(this.select.nodeCircles)
+        .attr('r', function(d) {
+          return elem.nodeRadiusScale(d.weight);
+        })
+        .style('fill', function(d) {
+          return elem.getGroupColor(d.group);
+        });
 
-    this.simulation.nodes(this.current.nodes)
-    this.simulation.force('link').links(this.current.links)
-    
+    this.simulation.nodes(this.current.nodes);
+    this.simulation.force('link').links(this.current.links);
+
     function ticked() {
       d3.selectAll('.linkPolygon')
-        .attr('points', function (d) {
-          const points = [
-            { 'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y },
-            { 'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y },
-            { 'x': d.target.x, 'y': d.target.y }];
-  
-          return points.map(
-            function (d) {
-              return [d.x, d.y].join(',');
-            })
-            .join(' ');
-        });
-  
+          .attr('points', function(d) {
+            const points = [
+              {'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
+              {'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
+              {'x': d.target.x, 'y': d.target.y}];
+
+            return points.map(
+                function(d) {
+                  return [d.x, d.y].join(',');
+                })
+                .join(' ');
+          });
+
       d3.selectAll('.nodeCircle')
-        .attr('cx', function (d) {
-          return d.x;
-        })
-        .attr('cy', function (d) {
-          return d.y;
-        });
+          .attr('cx', function(d) {
+            return d.x;
+          })
+          .attr('cy', function(d) {
+            return d.y;
+          });
     }
 
-    this.simulation.on('tick', ticked)
-    this.simulation.alpha(1).restart()
+    this.simulation.on('tick', ticked);
+    this.simulation.alpha(1).restart();
   }
 
   isConnected(a, b) {
@@ -449,9 +449,9 @@ class Slider {
           // TODO: call update function on network!
           // TODO: do something in case the date has been changed!
         });
-        // .on('sliderEnd', function() {
-        //  elem.network.highlight(node, link);
-        // });
+    // .on('sliderEnd', function() {
+    //  elem.network.highlight(node, link);
+    // });
   }
 }
 
@@ -793,7 +793,7 @@ class InfoChart {
 // prototype function to move SVG elements to front
 // TODO: move this to where it fits. not in global scope.
 d3.selection.prototype.moveToFront = function() {
-  return this.each(function() { 
+  return this.each(function() {
     this.parentNode.appendChild(this);
   });
 };

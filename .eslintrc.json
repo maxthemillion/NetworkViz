@@ -15,5 +15,8 @@
         "sourceType": "module"
     },
     "rules": {
+        "require-jsdoc":0,
+        "linebreak-style":0,
+        "prefer-spread":0
     }
 }
