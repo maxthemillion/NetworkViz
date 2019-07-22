@@ -49,6 +49,8 @@ p {
 
 .linkPolygon {
     opacity: 0.3;
+    stroke: #555;
+    stroke-width: 1px;
 }
 
 .chartLine {

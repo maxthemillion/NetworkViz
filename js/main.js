@@ -29,8 +29,8 @@ class Network {
     };
 
     this.linkProperties = {
-      'width_min': 5,
-      'width_max': 200,
+      'width_min': 1,
+      'width_max': 50,
       'showColor': opts.showLinkColor,
     };
 
@@ -171,6 +171,7 @@ class Network {
   }
 
   update(newDate) {
+    const elem = this;
     newDate = newDate.add(this.offset, 'days');
     this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
     this.updateLinkedByIndex(this.current.links);
@@ -185,15 +186,21 @@ class Network {
         .data(this.current.links, function(d) {
           return d.link_id;
         });
-
+    
     // link exit selection
     this.select.linkPolygons.exit()
         .remove();
 
     // link enter selection
     this.select.linkPolygons.enter()
-        .append('polygon')
-        .attr('class', 'linkPolygon');
+        .append('line')
+        .attr('class', 'linkPolygon')
+        .style('stroke', function(d) {
+          return elem.getLinkColor(d.rel_type);
+        })
+        .style('stroke-width', function(d) {
+          return elem.linkWeightScale(d.weight);
+        });
 
     // node update
     this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
@@ -206,7 +213,6 @@ class Network {
         .remove();
 
     // node enter selection
-    const elem = this;
     this.select.nodeCircles.enter()
         .append('circle')
         .attr('class', 'nodeCircle')
@@ -223,17 +229,17 @@ class Network {
 
     function ticked() {
       d3.selectAll('.linkPolygon')
-          .attr('points', function(d) {
-            const points = [
-              {'x': d.source.x + elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
-              {'x': d.source.x - elem.linkWeightScale(d.weight) / 2, 'y': d.source.y},
-              {'x': d.target.x, 'y': d.target.y}];
-
-            return points.map(
-                function(d) {
-                  return [d.x, d.y].join(',');
-                })
-                .join(' ');
+          .attr('x1', function(d) {
+            return d.source.x;
+          })
+          .attr('y1', function(d) {
+            return d.source.y;
+          })
+          .attr('x2', function(d) {
+            return d.target.x;
+          })
+          .attr('y2', function(d) {
+            return d.target.y;
           });
 
       d3.selectAll('.nodeCircle')
@@ -556,6 +562,9 @@ class Filter {
         })
         .object(links);
 
+    // TODO: There should be a much cleaner way to solve this...
+    // probably i could flatten the object like this:
+    // https://stackoverflow.com/questions/14270011/flatten-an-object-hierarchy-created-with-d3-js-nesting
     const typeKeys = Object.keys(linkMap);
     const resArray = [];
     for (let i = 0; i < typeKeys.length; ++i) {
