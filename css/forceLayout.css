@@ -47,8 +47,10 @@ p {
 }
 
 
-.link {
+.linkPolygon {
     opacity: 0.3;
+    stroke: #555;
+    stroke-width: 1px;
 }
 
 .chartLine {
@@ -65,7 +67,7 @@ p {
     display: none;
 }
 
-.node {
+.nodeCircle {
     stroke: white;
 }
 

@@ -1,629 +1,633 @@
+/* eslint-disable max-len */
 
-/* global d3, moment, minor */
+/* global d3, moment */
 
+class Network {
+  constructor(data, opts) {
+    this.links = data.links;
+    this.groups = data.groups;
+    this.nodes = data.nodes;
 
-!(function () {
-    "use strict"
-//#### parameters Start ####
-//
-//        'OneDrive',
-//        'waffleio',
-//        'getnikola',
-//        'Tribler',
-//        'BobPalmer',
-//        'novus',
-//        'rathena',
-//        'gatsbyjs'
-//
-    var project_name = "waffleio"
-    var filtered = false
-    
-    var dataName 
-    if (filtered){
-        dataName = "data/filtered/viz_" + project_name + ".json"
-    } else {
-        dataName = "data/viz_" + project_name + ".json"
-    }
+    this.data = data;
+    this.current = {};
+    this.select = {};
 
-//show all or selected link types ("All", "Quote", "Mention", "first_reply")
-    var linkTypeSelected = "All"
+    this.projectName = opts.project;
+    this.svg = opts.svg;
+    this.linkType = opts.linkType;
 
-//set the time interval (in days) over which links are being considered
-//*caution:* changes in linkInterval will make a recalculation 
-//of groups in the network neccessary
-    var linkInterval = 30
+    this.filtered = false;
+    this.highlightLocked = false;
+    this.highlightActive = false;
 
-//set the discrete slider intervals to prevent immediate recalculation ("day" "week", "month")
-    var sliderInterval = "week"
+    this.discreteInterval = 'week';
 
-//switch colors on and off
-    var showGroupColor = true
-    var showLinkColor = false
+    this.nodeProperties = {
+      'r_min': 6,
+      'r_max': 100,
+      'showColor': opts.showGroupColor,
+    };
 
-//set node properties
-    var minNodeRadius = 6
-    var maxNodeRadius = 100
-    var minLinkWidth = 5
-    var maxLinkWidth = 200
+    this.linkProperties = {
+      'width_min': 1,
+      'width_max': 50,
+      'showColor': opts.showLinkColor,
+    };
 
-//set repulsion strength (<0)
-    var chargeStrength = -200
+    this.forceProperties = {
+      'chargeStrength': -500,
+      'nodePadding': 20,
+      'collideStrength': 0.7,
+      'collideIterations': 3,
+    };
 
-//set collision parameters
-    var nodePadding = 20
-    var collideStrength = 0.7
-    var collideIterations = 10
+    this.f = new Filter(this.linkProperties.showColor);
 
-//set window size
-    var width, height
-    var linkedByIndex = {}
+    this.linkedByIndex = {};
 
-//supplementary charts height #TODO: move that to css
-    var elementHeight = 150
-    var elementTitleHeight = 30
-    var elementSpacing = 40
+    this.appendChartLayer();
+    this.setSize();
+    this.setScales();
 
-//#### parameters end ###
-    var chartWidth, chartHeight
-    var margin
-    var wrapper = d3.select("body").append("div").attr("class", "content-wrapper") //TODO: Move div to html
-    var svg = wrapper.append("svg").attr("id", "graph") //TODO: Move svg to html! why id graph not class?
-    var chartLayer = svg.append("g").attr("class", "chartLayer")
-    var maxDate
-    var minDate
+    const elem = this;
+    this.getLinkColor = function(d) {
+      return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'grey';
+    };
 
-    var highlightLocked = false
-    var highlightActive = false
+    this.getGroupColor = function(d) {
+      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'grey';
+    };
 
-    var tooltip = d3.select("body").append("div") //TODO: attach to graph layer not to body
-            .attr("class", "tooltip")
-            .style("opacity", 0);
+    this.setDates();
+    this.initNodePositions();
 
-    // Create a zoom behavior and set initial zoom level to 2.5
-    var zoom = d3.zoom()
-        .scaleExtent([1, 2])
-        .extent([[0, 0],[500, 800]])
-        .translateExtent([500, 800])
+    this.draw();
+  }
 
-    d3.select('svg').call(zoom.on("zoom", zoomed));
-    d3.select('svg').call(zoom).on("dblclick.zoom", null);
-    zoom.scaleTo(d3.select('svg').transition(), 1);
+  setSize() {
+    this.clientWidth = document.querySelector('#graph').clientWidth;
+    this.clientHeight = document.querySelector('#graph').clientHeight;
+    this.margin = {
+      top: 0,
+      left: 0,
+      bottom: 0,
+      right: 0,
+    };
 
-    function zoomed () {
-        svg.attr("transform", d3.event.transform)
-    }
+    this.chartWidth = this.clientWidth - (this.margin.left + this.margin.right);
+    this.chartHeight = this.clientHeight - (this.margin.top + this.margin.bottom);
 
-    // prototype function to move SVG elements to front
-    d3.selection.prototype.moveToFront = function () {
-        return this.each(function () {
-            this.parentNode.appendChild(this)
-        })
-    }
+    this.svg
+        .attr('width', this.clientWidth)
+        .attr('height', this.clientHeight);
 
-    function main() {
-        setSize()
+    this.chartLayer
+        .attr('width', this.chartWidth)
+        .attr('height', this.chartHeight)
+        .attr('transform', 'translate(' + [this.margin.left, this.margin.top] + ')');
+  }
 
-        d3.json(dataName, function (myNetwork) {
-            var data = myNetwork
-            data = parseDateStrings(data)
-            data = castIntegers(data)
+  setScales() {
+    this.nodeRadiusScale = d3.scaleLinear()
+        .domain([1, 200])
+        .range([this.nodeProperties.r_min, this.nodeProperties.r_max]);
 
-            drawTitle(data.info)
-            drawInfoBox(data.info)
-            drawChart(data)
-            drawSupplementaryCharts(data)
-        })
-    }
+    this.linkWeightScale = d3.scaleLinear()
+        .domain([1, 100])
+        .range([this.linkProperties.width_min, this.linkProperties.width_max]);
 
-    function setSize() {
-        width = document.querySelector("#graph").clientWidth
-        height = document.querySelector("#graph").clientHeight
+    this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    this.groupColorScale = d3.scaleOrdinal(d3.schemeCategory20);
+  }
 
-        margin = {
-            top: 0,
-            left: 0,
-            bottom: 0,
-            right: 0
-        }
+  appendChartLayer() {
+    this.chartLayer = this.svg
+        .append('g')
+        .attr('class', 'chartLayer');
+  }
 
-        chartWidth = width - (margin.left + margin.right)
-        chartHeight = height - (margin.top + margin.bottom)
+  initNodePositions() {
+    const elem = this;
+    this.nodes.forEach(function(d) {
+      d.x = elem.clientWidth / 2 + (Math.random() * 100 - 50);
+      d.y = elem.clientHeight / 2 + (Math.random() * 100 - 50);
+    });
+  }
 
-        svg
-                .attr("width", width)
-                .attr("height", height)
-
-        chartLayer
-                .attr("width", chartWidth)
-                .attr("height", chartHeight)
-                .attr("transform", "translate(" + [margin.left, margin.top] + ")")
-    }
-
-    function filterAndConsolidate(links, date, linkType)  {
-        var dateSelected = moment(date);
-        var minDate = moment(dateSelected).subtract(linkInterval, "days");
-        //filter for date
-        var linksFiltered = links.filter(function (d) {
-            return d.timestamp.isSameOrBefore(dateSelected) && d.timestamp.isSameOrAfter(minDate);
-        });
-
-        //filter for type
-        linksFiltered = linksFiltered.filter(function (d) {
-            if (linkType === "All") {
-                return true;
-            } else {
-                return d.rel_type === linkType;
-            }
-        });
-        return consolidate(linksFiltered);
-    }
-
-    function filterNodes(nodes, links) {
-        var linkedNodes = {}
-
-        links.forEach(function (d) {
-            if ((typeof d.source) === 'object') {
-                linkedNodes[d.source.id] = 1
-                linkedNodes[d.target.id] = 1
-            } else {
-                linkedNodes[d.source] = 1
-                linkedNodes[d.target] = 1
-            }
-        })
-
-        var filteredNodes = nodes.filter(function (d) {
-            return linkedNodes[d.id] === 1
-        })
-
-        var nodeIds = Object.keys(linkedNodes)
-        nodeIds.forEach(function (d) {
-            var res = nodes.find(x => x.id === +d)
-            if (res === undefined) {
-                console.log("node missing " + d)
-            }
-        })
-
-        return filteredNodes
-    }
-
-    function parseDateStrings(data) {
-
-        data.links.forEach(function (d) {
-            d.timestamp = moment(d.timestamp);
-        })
-        return data;
-    }
-
-    function castIntegers(data) {
-        data.nodes.forEach(function (d) {
-            d.id = +d.id
-        })
-        data.links.forEach(function (d) {
-            d.source = +d.source
-            d.target = +d.target
-        })
-        return data
-    }
-
-    function isConnected(a, b) {
-        return linkedByIndex[a.id + "," + b.id] === 1 || linkedByIndex[b.id + "," + a.id] === 1
-    }
-
-    function setInitialPosition(nodes) {
-        nodes.forEach(function (d) {
-            d.x = width / 2 + (Math.random() * 100 - 50);
-            d.y = height / 2 + (Math.random() * 100 - 50);
-        });
-    }
-
-    function calculateNodeWeight(node, link) {
-        node.forEach(function (d) {
-            d.weight = link.filter(function (l) {
-                return l.source === d.id || l.target === d.id
-            }).length
-        })
-    }
-
-    function updateLinkedByIndex(linksSelection) {
-        linkedByIndex = {}
-        linksSelection.forEach(function (d) {
-            if ((typeof d.source) === 'object') {
-                linkedByIndex[d.source.id + "," + d.target.id] = 1
-            } else {
-                linkedByIndex[d.source + "," + d.target] = 1
-            }
-        })
-    }
-
-    function consolidate(links) {
-
-        var linkMap = d3.nest()
-                .key(function (d) {
-                    return showLinkColor ? d.rel_type : "grey"
-                })
-                .key(function (d) {
-                    return d.source;
-                })
-                .key(function (d) {
-                    return d.target;
-                })
-                .rollup(function (values) {
-                    return d3.sum(values, function (d) {
-                        return 1;
-                    })
-                })
-                .object(links);
-                
-        var typeKeys = Object.keys(linkMap);
-        var resArray = [];
-        for (var i = 0; i < typeKeys.length; ++i) {
-
-            var currentTypeData = linkMap[typeKeys[i]];
-            var sourceKeys = Object.keys(currentTypeData);
-            for (var j = 0; j < sourceKeys.length; ++j) {
-
-                var currentSourceData = currentTypeData[sourceKeys[j]];
-                var targetKeys = Object.keys(currentSourceData);
-                for (var k = 0; k < targetKeys.length; ++k) {
-                    var weight = currentSourceData[targetKeys[k]];
-                    resArray.push({
-                        "source": +sourceKeys[j],
-                        "target": +targetKeys[k],
-                        "weight": +weight,
-                        "rel_type": typeKeys[i],
-                        "link_id": sourceKeys[j] + "-" + targetKeys[k]
-                    });
-                }
-            }
-        }
-        return resArray;
-    }
-
-    function filterGroups(allGroups, date) {
-        //var dstring = date.format("YYYY-MM-DD")
-        var dstring = date.format("YYYY-MM-DD")
-        var res = allGroups[dstring]
-
-        if (res === undefined) {
-            dstring = moment(date).add(1, "day").format("YYYY-MM-DD")
-            res = allGroups[dstring]
-        }
-
-        if (res === undefined) {
-            dstring = moment(date).subtract(1, "day").format("YYYY-MM-DD")
-            res = allGroups[dstring]
-        }
-
-
-        return res
-    }
-
-    function assignGroups(nodes, groups) {
-
-        if (groups !== undefined) {
-            var node_ids = Object.keys(groups)
-
-            node_ids.forEach(function (d) {
-                var _d = +d
-                var nextNode = nodes.find(x => x.id === _d)
-                if (nextNode !== undefined) {
-                    nextNode.group = groups[d]
-                } else {
-                    console.log("node not found. id: " + d)
-                }
+  setDates() {
+    /* initialize date variables:
+     *
+     * minDate: set to the earliest date occurence in the data
+     * oldDate: (date currently selected) set to the beginning of the slider
+     *          interval which covers the minimum Date
+     * offset:  difference in days between minDate and oldDate
+     * maxDate: set to the last date occurence in the data
+     *
+     */
+    this.minDate = moment(Object.keys(this.groups).sort()[0]);
+    this.maxDate = moment(
+        Math.max.apply(
+            Math,
+            this.links.map(function(o) {
+              return o.timestamp;
             })
-        }
-        return nodes
-    }
+        )
+    );
 
-    function drawTitle(info) {
-        var titleString = "Communication network of project " + info[0].owner + " " + info[0].repo
-        var titleData = [titleString]
+    this.oldDate = moment(this.minDate);
+    this.oldDate.startOf(this.discreteInterval);
 
-        var title = d3.select("#title")
-                .selectAll("text")
-                .data(titleData)
-                .enter()
-                .append("h1")
+    this.offset = this.minDate.diff(this.oldDate, 'days'); // negative
+  }
 
-        title
-                .text(function (d) {
-                    return d;
-                })
-                .attr("x", "10%")
-                .attr("y", "66%")
-    }
-
-    function drawChart(data) {
-        var nodesSelection, linksSelection
-
-        /* initialize data variables
-         * allLinksRaw:     holds links in raw format (unaggregated with weight equal to 1)
-         * allGroups:       holds group information supplied with the data    
-         * allNodes:        holds all nodes supplied with the data
-         */
-
-        var allLinksRaw = data.links
-        var allGroups = data.groups
-        var allNodes = data.nodes
-        setInitialPosition(allNodes);
-
-        /* Initialize d3 scale variables
-         * 
-         */
-
-        var nodeRadiusScale = d3.scaleLinear()
-                .domain([1, 200])
-                .range([minNodeRadius, maxNodeRadius])
-
-        var linkWeightScale = d3.scaleLinear()
-                .domain([1, 100])
-                .range([minLinkWidth, maxLinkWidth])
-
-        var linkColorScale = d3.scaleOrdinal(d3.schemeCategory10)
-        var linkColor = function (d) {
-            return showLinkColor ? linkColorScale(d) : "grey"
-        }
-
-        var groupColorScale = d3.scaleOrdinal(d3.schemeCategory20)
-        var groupColor = function (d) {
-            return showGroupColor ? groupColorScale(d) : "grey"
-        }
-
-        /* initialize date variables:
-         * 
-         * minDate: set to the earliest date occurence in the data
-         * oldDate: (date currently selected) set to the beginning of the slider
-         *          interval which covers the minimum Date
-         * offset:  difference in days between minDate and oldDate
-         * maxDate: set to the last date occurence in the data
-         * 
-         */
-
-        minDate = moment(Object.keys(allGroups).sort()[0])
-        var oldDate = moment(minDate);
-        oldDate.startOf(sliderInterval);
-
-        var offset = minDate.diff(oldDate, 'days');
-        maxDate = moment(Math.max.apply(Math, allLinksRaw.map(function (o) {
-            return o.timestamp;
-        })));
-
-        /* select required data for the first period
-         * 
-         * links:   holds all links which fall into the first period and which
-         *          are of the selected link type.
-         * 
-         * nodes:   holds all nodes, which are connected via links in the first 
-         *          period
-         * 
-         * groups:  holds group information to all currently connected nodes
-         * 
-         */
-
-        var links = filterAndConsolidate(allLinksRaw, minDate, linkTypeSelected)
-
-        updateLinkedByIndex(links)
-        calculateNodeWeight(allNodes, links)
-
-        var nodes = filterNodes(allNodes, links)
-
-        var groups = filterGroups(allGroups, minDate)
-        nodes = assignGroups(nodes, groups)
-
-        /* Initialize d3.simulation
-         * 
-         * simulation: 
-         *   force link:       
-         *   force collide:
-         *   force charge:
-         *   force center:
-         *   force y:
-         *   force x:
-         * 
-         * link: svg elements created from link data links
-         *   
-         */
-
-
-        var simulation = d3.forceSimulation()
-                .force("link", d3.forceLink().id(function (d) {
-                    return d.id;
+  draw() {
+    const elem = this;
+    // define simulation
+    this.simulation = d3.forceSimulation()
+        .force('y',
+            d3.forceX(this.chartWidth / 2).strength(0.4))
+        .force('x',
+            d3.forceY(this.chartHeight / 2).strength(0.6))
+        .force('charge', d3.forceManyBody().strength(this.forceProperties.chargeStrength))
+        .force('link',
+            d3.forceLink().id(
+                function(d) {
+                  return d.id;
                 }))
-                .force("collide", d3.forceCollide(function (d) {
-                    return d.r + nodePadding
-                }).strength(collideStrength).iterations(collideIterations))
-                .force("charge", d3.forceManyBody().strength(chargeStrength))
-                .force("center", d3.forceCenter(chartWidth / 2, chartHeight / 2))
-                .force("y", d3.forceY(chartWidth / 2))
-                .force("x", d3.forceX(chartHeight / 2))
+        .force(
+            'collide',
+            d3.forceCollide(function(d) {
+              return d.r + elem.forceProperties.nodePadding;
+            })
+                .strength(this.forceProperties.collideStrength)
+                .iterations(this.forceProperties.collideIterations));
 
-        var link = svg
-                .selectAll("polygon")
-                .data(links)
-                .enter()
-                .append("polygon")
-                .attr("class", "link")
-                .style("fill", function (d) {
-                    return linkColor(d.rel_type)
-                })
+    this.simulation.alphaMin(0.01);
+    this.simulation.stop();
 
 
-        var node = svg.selectAll("circle")
-                .data(nodes)
-                .enter()
-                .append("circle")
-                .attr("class", "node")
-                .attr("r", function (d) {
-                    return nodeRadiusScale(d.weight)
-                })
-                .style("fill", function (d) {
-                    return groupColor(d.group)
-                })
+    this.update(this.oldDate);
+    // this.highlight(this.select.nodes, this.select.links);
+  }
 
-        /* define simulation steps
-         * 
-         */
-        
-
-        var ticked = function () {
-            link
-                .attr("points",  function(d){
-                    var points = [
-                        {'x': d.source.x + linkWeightScale(d.weight)/2, 'y':d.source.y},
-                        {'x': d.source.x - linkWeightScale(d.weight)/2, 'y':d.source.y},
-                        {'x': d.target.x, 'y': d.target.y}]
-                    
-                    return points.map(
-                        function(d){return [d.x, d.y].join(',');})
-                            .join(" ")
-
-                })
-
-            node
-                .attr("cx", function (d) {
-                    return d.x
-                })
-                .attr("cy", function (d) {
-                    return d.y
-                });
-        }
+  update(newDate) {
+    const elem = this;
+    newDate = newDate.add(this.offset, 'days');
+    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
+    this.updateLinkedByIndex(this.current.links);
+    this.calculateNodeWeight(this.data.nodes, this.current.links);
+    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
+    this.current.groups = this.f.filterGroups(this.groups, newDate);
+    this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
 
 
-        /* Initialize the time slider element
-         * 
-         * 
-         */
+    // link update
+    this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
+        .data(this.current.links, function(d) {
+          return d.link_id;
+        });
+    
+    // link exit selection
+    this.select.linkPolygons.exit()
+        .remove();
 
-        var sliderWidth = width;
-        var sliderScale = d3.scaleLinear()
-                .domain([minDate, maxDate])
-                .range([0, sliderWidth])
-                .clamp(true)
-
-        var dispatch = d3.dispatch("sliderChange", "sliderEnd") // define dispatch events
-
-        wrapper.append("div")
-                .attr("class", "slider")
-
-        var slider = d3.select(".slider")
-                .style("width", sliderWidth - margin.left + "px")
-                .style("height", "30px")
-                .style("margin-left", margin.left + "px")
-
-        var sliderTray = slider.append("div")
-                .attr("class", "slider-tray")
-
-        var sliderAxisContainer = sliderTray.append("div")
-                .attr("class", "slider-text")
-
-        var sliderHandle = slider.append("div")
-                .attr("class", "slider-handle")
-
-        sliderHandle.append("div")
-                .attr("class", "slider-handle-icon")
-
-        slider.call(d3.drag()
-                .on("drag", function () {
-                    dispatch.call("sliderChange")
-                })
-                .on("end", function () {
-                    dispatch.call("sliderEnd")
-                }))
-
-        var sliderTimeScale = d3.scaleTime()
-                .range([0, sliderWidth - margin.left])
-                .domain([minDate, maxDate])
-
-        sliderAxisContainer
-                .append("svg")
-                .attr("width", sliderWidth)
-                .attr("heigt", 20)
-                .append("g")
-                .attr("class", "axis-main")
-                .attr("id", "main")
-                .attr("transform", "translate(0, 8)")
-                .call(
-                    d3.axisBottom(sliderTimeScale)
-                    .ticks(d3.timeMonth.every(6))
-                    .tickFormat(d3.timeFormat("%d %B %y")))
-
-        dispatch.on("sliderChange", function () {
-
-            var value = sliderScale.invert(d3.mouse(sliderTray.node())[0])
-
-            sliderHandle.style("left", sliderScale(value) + "px")
-
-            d3.selectAll(".s-chart-cursor")
-                    .attr("x", sliderScale(value) + "px")
-
-            value = Math.round(value);
-
-            var newDate = moment(value).startOf(sliderInterval).add(offset, 'days');
-
-            if (!newDate.isSame(oldDate)) {
-                // do something in case the date has been changed
-
-                oldDate = moment(newDate)
-
-                linksSelection = filterAndConsolidate(allLinksRaw, newDate, linkTypeSelected);
-                updateLinkedByIndex(linksSelection)
-
-                nodesSelection = filterNodes(allNodes, linksSelection);
-                calculateNodeWeight(nodesSelection, linksSelection)
-                
-                var groups = filterGroups(allGroups, oldDate)
-                nodesSelection = assignGroups(nodesSelection, groups)
-
-                //node enter update exit
-                node = svg.selectAll(".node")
-                        .data(nodesSelection, function (d) {
-                            return d.id
-                        })
-
-                //Node enter update exit
-                node.exit()
-                        .remove()
-
-                node = node.enter()
-                        .append("circle")
-                        .attr("class", "node")
-                        .merge(node)
-                        .attr("r", function (d) {
-                            return nodeRadiusScale(d.weight);
-                        })
-                        .style("fill", function (d) {
-                            return groupColor(d.group)
-                        })
-
-                //Link enter update exit
-                link = svg.selectAll(".link")
-                        .data(linksSelection, function (d) {
-                            return d.link_id
-                        })
-
-                link.exit()
-                        .remove();
-                link = link.enter()
-                        .append("polygon")
-                        .attr("class", "link")
-                        .merge(link)
-                        .style("fill", function (d) {
-                            return linkColor(d.rel_type)
-                        })
-
-                var n = d3.selectAll(".link").size()
-
-                node.each(function () {
-                    d3.select(this).moveToFront()
-                });
-
-                simulation.nodes(nodesSelection)
-                simulation.force("link").links(linksSelection)
-                simulation.alpha(1).restart()
-            }
-
+    // link enter selection
+    this.select.linkPolygons.enter()
+        .append('line')
+        .attr('class', 'linkPolygon')
+        .style('stroke', function(d) {
+          return elem.getLinkColor(d.rel_type);
         })
+        .style('stroke-width', function(d) {
+          return elem.linkWeightScale(d.weight);
+        });
+
+    // node update
+    this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
+        .data(this.current.nodes, function(d) {
+          return d.id;
+        });
+
+    // node exit selection
+    this.select.nodeCircles.exit()
+        .remove();
+
+    // node enter selection
+    this.select.nodeCircles.enter()
+        .append('circle')
+        .attr('class', 'nodeCircle')
+        .merge(this.select.nodeCircles)
+        .attr('r', function(d) {
+          return elem.nodeRadiusScale(d.weight);
+        })
+        .style('fill', function(d) {
+          return elem.getGroupColor(d.group);
+        });
+
+    this.simulation.nodes(this.current.nodes);
+    this.simulation.force('link').links(this.current.links);
+
+    function ticked() {
+      d3.selectAll('.linkPolygon')
+          .attr('x1', function(d) {
+            return d.source.x;
+          })
+          .attr('y1', function(d) {
+            return d.source.y;
+          })
+          .attr('x2', function(d) {
+            return d.target.x;
+          })
+          .attr('y2', function(d) {
+            return d.target.y;
+          });
+
+      d3.selectAll('.nodeCircle')
+          .attr('cx', function(d) {
+            return d.x;
+          })
+          .attr('cy', function(d) {
+            return d.y;
+          });
+    }
+
+    this.simulation.on('tick', ticked);
+    this.simulation.alpha(1).restart();
+  }
+
+  isConnected(a, b) {
+    return this.linkedByIndex[a.id + ',' + b.id] === 1 || this.linkedByIndex[b.id + ',' + a.id] === 1;
+  }
+
+  calculateNodeWeight(node, link) {
+    node.forEach(function(d) {
+      d.weight = link.filter(function(l) {
+        return l.source === d.id || l.target === d.id;
+      }).length;
+    });
+  }
+
+  updateLinkedByIndex(linksSelection) {
+    this.linkedByIndex = {};
+    const elem = this;
+    linksSelection.forEach(function(d) {
+      if ((typeof d.source) === 'object') {
+        elem.linkedByIndex[d.source.id + ',' + d.target.id] = 1;
+      } else {
+        elem.linkedByIndex[d.source + ',' + d.target] = 1;
+      }
+    });
+  }
+
+  highlight(node, link) {
+    const elem = this;
+    function activate(d, hoverNode) {
+      if (!elem.highlightLocked) {
+        elem.highlightActive = true;
+
+        node.classed('node-active', function(o) {
+          const isActive = elem.isConnected(d, o) ? true : false;
+          return isActive;
+        });
+
+        node.classed('node-passive', function(o) {
+          const isPassive = elem.isConnected(d, o) ? false : true;
+          return isPassive;
+        });
+
+        link.classed('link-active', function(o) {
+          return o.source === d || o.target === d ? true : false;
+        });
+        link.classed('link-passive', function(o) {
+          return o.source === d || o.target === d ? false : true;
+        });
+
+        d3.select(hoverNode).classed('node-active', true);
+        d3.select(hoverNode).classed('node-passive', false);
+      }
+    }
+
+    function passivate() {
+      if (!elem.highlightLocked) {
+        elem.highlightActive = false;
+        node.classed('node-active', false);
+        node.classed('node-passive', false);
+        link.classed('link-active', false);
+        link.classed('link-passive', false);
+      }
+    }
+
+    node.on('mouseover', function(d) {
+      activate(d, this);
+      tooltip.transition()
+          .duration(200)
+          .style('opacity', .9);
+      tooltip.html(
+          'id: ' + d.name + '<br/>' +
+        'weight: ' + d.weight + '<br/>' +
+        'group: ' + d.group)
+          .style('left', (d3.event.pageX) + 'px')
+          .style('top', (d3.event.pageY - 28) + 'px');
+    })
+        .on('mouseout', function(d) {
+          passivate();
+          tooltip.transition()
+              .duration(500)
+              .style('opacity', 0);
+        })
+        .on('mouseup', function(d) {
+          if (!highlightLocked) {
+            highlightLocked = true;
+          } else {
+            highlightLocked = false;
+            passivate();
+          }
+        });
+  }
+
+  reassignGroups(nodes, groups) {
+    if (groups !== undefined) {
+      const nodeIDs = Object.keys(groups);
+
+      nodeIDs.forEach(function(d) {
+        const _d = +d;
+        const nextNode = nodes.find((x) => x.id === _d);
+        if (nextNode !== undefined) {
+          nextNode.group = groups[d];
+        } else {
+          console.log('node not found. id: ' + d);
+        }
+      });
+    }
+    return nodes;
+  }
+}
+
+class Slider {
+  constructor(network) {
+    this.network = network;
+
+    this.width = this.network.chartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
+    this.minDate = this.network.minDate;
+    this.maxDate = this.network.maxDate;
+
+    this.sliderTimeScale = d3.scaleTime()
+        .range([0, this.width])
+        .domain([this.minDate, this.maxDate]);
+
+    this.sliderScale = d3.scaleLinear()
+        .domain([this.minDate, this.maxDate])
+        .range([0, this.width])
+        .clamp(true);
+
+    this.select = {};
+
+    this.setStyle();
+    this.dispatchEvents();
+  }
+
+  setStyle() {
+    this.select.slider = d3.select('.slider')
+        .style('width', this.width + 'px')
+        .style('height', '30px');
+    //            .style("margin-left", margin.left + "px")
+    this.select.sliderTray = this.select.slider.append('div')
+        .attr('class', 'slider-tray');
+
+
+    this.select.sliderHandle = this.select.slider.append('div')
+        .attr('class', 'slider-handle');
+
+    this.select.sliderAxisContainer = this.select.sliderTray.append('div')
+        .attr('class', 'slider-text');
+
+    this.select.sliderHandleIcon = this.select.sliderHandle.append('div')
+        .attr('class', 'slider-handle-icon');
+
+    this.select.sliderAxisContainer
+        .append('svg')
+        .attr('width', this.sliderWidth)
+        .attr('heigt', 20)
+        .append('g')
+        .attr('class', 'axis-main')
+        .attr('id', 'main')
+        .attr('transform', 'translate(0, 8)')
+        .call(
+            d3.axisBottom(this.sliderTimeScale)
+                .ticks(d3.timeMonth.every(6))
+                .tickFormat(d3.timeFormat('%d %B %y')));
+  }
+
+  dispatchEvents() {
+    this.dispatch = d3.dispatch('sliderChange', 'sliderEnd'); // define dispatch events
+
+    const elem = this;
+    this.select.slider.call(d3.drag()
+        .on('drag', function() {
+          elem.dispatch.call('sliderChange');
+        })
+        .on('end', function() {
+          elem.dispatch.call('sliderEnd');
+        }));
+
+    this.dispatch
+        .on('sliderChange', function() {
+          let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
+          elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
+
+          d3.selectAll('.s-chart-cursor')
+              .attr('x', elem.sliderScale(value) + 'px');
+
+          value = Math.round(value);
+
+          const newDate = moment(value).startOf(elem.network.discreteInterval);
+          if (!newDate.isSame(elem.oldDate)) {
+            elem.oldDate = moment(newDate);
+            elem.network.update(newDate);
+          }
+
+          d3.selectAll('.nodeCircle').each(function() {
+            d3.select(this).moveToFront();
+          });
+
+
+          // TODO: where has this code part gone?
+          // TODO: call update function on network!
+          // TODO: do something in case the date has been changed!
+        });
+    // .on('sliderEnd', function() {
+    //  elem.network.highlight(node, link);
+    // });
+  }
+}
+
+class Filter {
+  constructor(showLinkColor) {
+    this.linkInterval = 30;
+    this.showLinkColor = showLinkColor; // TODO: missplaced attribute. move to better fit.
+  }
+
+  filterNodes(nodes, links) {
+    const linkedNodes = {};
+
+    links.forEach(function(d) {
+      if ((typeof d.source) === 'object') {
+        linkedNodes[d.source.id] = 1;
+        linkedNodes[d.target.id] = 1;
+      } else {
+        linkedNodes[d.source] = 1;
+        linkedNodes[d.target] = 1;
+      }
+    });
+
+    const filteredNodes = nodes.filter(function(d) {
+      return linkedNodes[d.id] === 1;
+    });
+
+    const nodeIds = Object.keys(linkedNodes);
+    nodeIds.forEach(function(d) {
+      const res = nodes.find((x) => x.id === +d);
+      if (res === undefined) {
+        console.log('node missing ' + d);
+      }
+    });
+
+    return filteredNodes;
+  }
+
+  filterLinks(date, type, links) {
+    links = this._forDate(date, links);
+    links = this._forType(type, links);
+    links = this._consolidate(links);
+    return links;
+  }
+
+  filterGroups(groups, date) {
+    let dstring = date.format('YYYY-MM-DD');
+    let res = groups[dstring];
+
+    if (res === undefined) {
+      dstring = moment(date).add(1, 'day').format('YYYY-MM-DD');
+      res = groups[dstring];
+    }
+
+    if (res === undefined) {
+      dstring = moment(date).subtract(1, 'day').format('YYYY-MM-DD');
+      res = groups[dstring];
+    }
+
+    return res;
+  }
+
+  _forDate(date, links) {
+    date = moment(date);
+    const minDate = moment(date).subtract(this.linkInterval, 'days');
+    links = links.filter(
+        function(d) {
+          return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
+        }
+    );
+
+    return links;
+  }
+
+  _forType(linkType, links) {
+    links = links.filter(function(d) {
+      if (linkType === 'all') {
+        return true;
+      } else {
+        return d.rel_type === linkType;
+      }
+    });
+
+    return links;
+  }
+
+  _consolidate(links) {
+    const elem = this;
+    const linkMap = d3.nest()
+        .key(function(d) {
+          return elem.showLinkColor ? d.rel_type : 'grey';
+        })
+        .key(function(d) {
+          return d.source;
+        })
+        .key(function(d) {
+          return d.target;
+        })
+        .rollup(function(values) {
+          return d3.sum(values, function(d) {
+            return 1;
+          });
+        })
+        .object(links);
+
+    // TODO: There should be a much cleaner way to solve this...
+    // probably i could flatten the object like this:
+    // https://stackoverflow.com/questions/14270011/flatten-an-object-hierarchy-created-with-d3-js-nesting
+    const typeKeys = Object.keys(linkMap);
+    const resArray = [];
+    for (let i = 0; i < typeKeys.length; ++i) {
+      const currentTypeData = linkMap[typeKeys[i]];
+      const sourceKeys = Object.keys(currentTypeData);
+      for (let j = 0; j < sourceKeys.length; ++j) {
+        const currentSourceData = currentTypeData[sourceKeys[j]];
+        const targetKeys = Object.keys(currentSourceData);
+        for (let k = 0; k < targetKeys.length; ++k) {
+          const weight = currentSourceData[targetKeys[k]];
+          resArray.push({
+            'source': +sourceKeys[j],
+            'target': +targetKeys[k],
+            'weight': +weight,
+            'rel_type': typeKeys[i],
+            'link_id': sourceKeys[j] + '-' + targetKeys[k],
+          });
+        }
+      }
+    }
+    return resArray;
+  }
+}
+
+class Title {
+  constructor(info) {
+    this.info = info[0];
+    this.titleString = 'Communication network of project ' + this.info.owner + ' ' + this.info.repo;
+
+    this.draw();
+  }
+
+  draw() {
+    const title = d3.select('#title')
+        .selectAll('text')
+        .data([this.titleString])
+        .enter()
+        .append('h1');
+
+    title.text(function(d) {
+      return d;
+    })
+        .attr('x', '10%')
+        .attr('y', '66%');
+
+    const infoData =
+      [this.info.owner + ' ' + this.repo + 'consists of ' +
+        this.info.total_nodes + ' nodes with ' +
+        this.info.total_links + ' links. ' +
+        this.info.no_comments + ' comments have been analyzed.'];
+
+    const infoText = d3.select('#infobox')
+        .selectAll('text')
+        .data(infoData)
+        .enter()
+        .append('p')
+        .attr('class', 'infobox-text');
+
+    infoText
+        .text(function(d) {
+          return d;
+        })
+<<<<<<< HEAD
                 .on("sliderEnd", function () {
 
                     highlight(node, link)
@@ -706,176 +710,240 @@
                     passivate()
                 }
             })
+=======
+        .attr('x', '20%')
+        .attr('y', '66%');
+  }
+}
+
+class Tooltip {
+  constructor(element) {
+    element
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('opacity', 0);
+  }
+
+  show() {
+    this.style('opacity', 1);
+  }
+
+  hide() {
+    this.style('opacity', 0);
+  }
+}
+
+class InfoChart {
+  constructor(opts) {
+    this.elementHeight = 150;
+    this.elementTitleHeight = 30;
+    this.elementSpacing = 40;
+  }
+
+  draw(data) {
+    // calculate number of nodes in network per time frame
+    function calcNumNodes() {
+      const cDate = moment(minDate);
+      const numNodesData = [];
+
+      while (cDate.isSameOrBefore(maxDate)) {
+        const linkSelection = filterAndConsolidate(data.links, cDate, linkTypeSelected); // function is only defined inside class Network.
+        const nodeSelection = filterNodes(data.nodes, linkSelection);
+        numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
+        cDate.add(1, sliderInterval); // TODO: sliderinterval only exists as discreteInterval within network class
+      }
+
+      return numNodesData;
     }
 
-    function drawSupplementaryCharts(data) {
-        // calculate number of nodes in network per time frame
-        function calcNumNodes() {
-            var cDate = moment(minDate)
-            var numNodesData = []
+    function calcNumLinks() {
+      const cDate = moment(minDate);
+      const numLinksData = [];
 
-            while (cDate.isSameOrBefore(maxDate)) {
-                var linkSelection = filterAndConsolidate(data.links, cDate, linkTypeSelected)
-                var nodeSelection = filterNodes(data.nodes, linkSelection)
-                numNodesData.push({"date": moment(cDate), "num": nodeSelection.length})
-                cDate.add(1, sliderInterval)
-            }
+      while (cDate.isSameOrBefore(maxDate)) {
+        const linkSelection = filterAndConsolidate(data.links, cDate, 'All');
+        numLinksData.push({'date': moment(cDate), 'num': linkSelection.length});
+        cDate.add(1, sliderInterval);
+      }
 
-            return numNodesData
-        }
-
-        function calcNumLinks() {
-            var cDate = moment(minDate)
-            var numLinksData = []
-
-            while (cDate.isSameOrBefore(maxDate)) {
-                var linkSelection = filterAndConsolidate(data.links, cDate, "All")
-                numLinksData.push({"date": moment(cDate), "num": linkSelection.length})
-                cDate.add(1, sliderInterval)
-            }
-
-            return numLinksData
-        }
-
-        function calcNumGroups() {
-
-            function getUnique(value, index, self) {
-                return self.indexOf(value) === index;
-            }
-
-            var cDate = moment(minDate)
-            var numGroupsData = []
-
-            while (cDate.isSameOrBefore(maxDate)) {
-                var groupSelection = filterGroups(data.groups, cDate)
-                var count = 0
-                if (groupSelection !== undefined) {
-                    var keys = Object.values(groupSelection)
-                    var unique = keys.filter(getUnique)
-                    count = unique.length
-                }
-
-                numGroupsData.push({"date": moment(cDate), "num": count})
-                cDate.add(1, sliderInterval)
-            }
-            return numGroupsData
-        }
-
-        function readModularity() {
-            var modularityData = []
-
-            var keys = Object.keys(data.modularity).sort()
-            var cDate = moment(minDate)
-
-            for (var i = 0; i < keys.length; ++i) {
-                modularityData.push({"date": moment(keys[i]), "num": +data.modularity[keys[i]]})
-            }
-
-            return modularityData
-        }
-
-        function generateElement(dataFunc, title) {
-            // set the ranges
-            var elemData = dataFunc()
-            var domainMax = d3.max(elemData, function (d) {
-                return d.num
-            })
-
-            var domainMin = d3.min(elemData, function (d) {
-                return Math.min(d.num, 0)
-            })
-
-            var x = d3.scaleTime()
-                    .range([0, chartWidth])
-                    .domain([minDate, maxDate])
-
-            var y = d3.scaleLinear()
-                    .range([elementHeight, 0])
-                    .domain([domainMin, domainMax])
-
-            var valueline = d3.line()
-                    .x(function (d) {
-                        return x(d.date);
-                    })
-                    .y(function (d) {
-                        return y(d.num);
-                    })
-
-            var sChartWrapper = wrapper.append("svg")
-                    .attr("class", "s-chart-wrapper")
-                    .attr("width", chartWidth)
-                    .attr("height", elementHeight + elementTitleHeight);
-
-            sChartWrapper.append("svg")
-                    .attr("class", "s-chart-title")
-                    .attr("width", chartWidth)
-                    .attr("height", elementTitleHeight)
-                    .append("text")
-                    .attr("x", 0)
-                    .attr("y", elementTitleHeight / 2)
-                    .attr("text-anchor", "left")
-                    .text(title)
-
-            var sChart = sChartWrapper
-                    .append("svg")
-                    .attr("width", chartWidth)
-                    .attr("height", elementHeight)
-                    .attr("class", "s-chart")
-                    .append("g")
-                    .attr("transform", "translate(0," + elementTitleHeight + ")")
-
-            sChart.append("path")
-                    .attr("class", "chartLine")
-                    .attr("d", valueline(elemData))
-
-            sChart.append("g")
-                    .attr("transform", "translate(0," + elementHeight + ")")
-                    .attr("class", "axis")
-                    .call(
-                        d3.axisBottom(x)
-                        .ticks(d3.timeMonth.every(6))
-                        .tickFormat(d3.timeFormat("%d %B %y")));
-
-            sChart.append("g")
-                    .attr("transform", "translate(0,0)")
-                    .attr("class", "axis")
-                    .call(d3.axisLeft(y).ticks(5))
-
-            sChart.append("rect")
-                    .attr("class", "s-chart-cursor")
-                    .style("height", elementHeight)
-
-        }
-
-        generateElement(calcNumNodes, "No. of Nodes")
-        generateElement(calcNumLinks, "No. of Links")
-        generateElement(calcNumGroups, "No. of Groups")
-        generateElement(readModularity, "Modularity")
-
+      return numLinksData;
+>>>>>>> oo
     }
 
-    function drawInfoBox(info) {
-        var infoData = 
-            [info[0].owner + " " + info[0].repo + "consists of " +
-            info[0].total_nodes + " nodes with " +
-            info[0].total_links + " links. " +
-            info[0].no_comments + " comments have been analyzed."]
+    function calcNumGroups() {
+      function getUnique(value, index, self) {
+        return self.indexOf(value) === index;
+      }
 
-        var infoText = d3.select("#infobox")
-                .selectAll("text")
-                .data(infoData)
-                .enter()
-                .append("p")
-                .attr("class", "infobox-text")
+      const cDate = moment(minDate);
+      const numGroupsData = [];
 
-        infoText
-                .text(function (d) {
-                    return d;
-                })
-                .attr("x", "20%")
-                .attr("y", "66%")
+      while (cDate.isSameOrBefore(maxDate)) {
+        const groupSelection = filterGroups(this.groups, cDate);
+        let count = 0;
+        if (groupSelection !== undefined) {
+          const keys = Object.values(groupSelection);
+          const unique = keys.filter(getUnique);
+          count = unique.length;
+        }
+
+        numGroupsData.push({'date': moment(cDate), 'num': count});
+        cDate.add(1, sliderInterval);
+      }
+      return numGroupsData;
     }
 
-    main()
+    function readModularity() {
+      const modularityData = [];
 
-}());
+      const keys = Object.keys(data.modularity).sort();
+
+      for (let i = 0; i < keys.length; ++i) {
+        modularityData.push({'date': moment(keys[i]), 'num': +data.modularity[keys[i]]});
+      }
+
+      return modularityData;
+    }
+
+    function generateElement(dataFunc, title) {
+      // set the ranges
+      const elemData = dataFunc();
+      const domainMax = d3.max(elemData, function(d) {
+        return d.num;
+      });
+
+      const domainMin = d3.min(elemData, function(d) {
+        return Math.min(d.num, 0);
+      });
+
+      const x = d3.scaleTime()
+          .range([0, chartWidth])
+          .domain([minDate, maxDate]);
+
+      const y = d3.scaleLinear()
+          .range([elementHeight, 0])
+          .domain([domainMin, domainMax]);
+
+      const valueline = d3.line()
+          .x(function(d) {
+            return x(d.date);
+          })
+          .y(function(d) {
+            return y(d.num);
+          });
+
+      const sChartWrapper = wrapper.append('svg')
+          .attr('class', 's-chart-wrapper')
+          .attr('width', chartWidth)
+          .attr('height', elementHeight + elementTitleHeight);
+
+      sChartWrapper.append('svg')
+          .attr('class', 's-chart-title')
+          .attr('width', chartWidth)
+          .attr('height', elementTitleHeight)
+          .append('text')
+          .attr('x', 0)
+          .attr('y', elementTitleHeight / 2)
+          .attr('text-anchor', 'left')
+          .text(title);
+
+      const sChart = sChartWrapper
+          .append('svg')
+          .attr('width', chartWidth)
+          .attr('height', elementHeight)
+          .attr('class', 's-chart')
+          .append('g')
+          .attr('transform', 'translate(0,' + elementTitleHeight + ')');
+
+      sChart.append('path')
+          .attr('class', 'chartLine')
+          .attr('d', valueline(elemData));
+
+      sChart.append('g')
+          .attr('transform', 'translate(0,' + elementHeight + ')')
+          .attr('class', 'axis')
+          .call(
+              d3.axisBottom(x)
+                  .ticks(d3.timeMonth.every(6))
+                  .tickFormat(d3.timeFormat('%d %B %y')));
+
+      sChart.append('g')
+          .attr('transform', 'translate(0,0)')
+          .attr('class', 'axis')
+          .call(d3.axisLeft(y).ticks(5));
+
+      sChart.append('rect')
+          .attr('class', 's-chart-cursor')
+          .style('height', elementHeight);
+    }
+
+    generateElement(calcNumNodes, 'No. of Nodes');
+    generateElement(calcNumLinks, 'No. of Links');
+    generateElement(calcNumGroups, 'No. of Groups');
+    generateElement(readModularity, 'Modularity');
+  }
+}
+
+// prototype function to move SVG elements to front
+// TODO: move this to where it fits. not in global scope.
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function() {
+    this.parentNode.appendChild(this);
+  });
+};
+
+
+!(function main() {
+  // #### parameters Start ####
+  //
+  //        'OneDrive',
+  //        'waffleio',
+  //        'getnikola',
+  //        'Tribler',
+  //        'BobPalmer',
+  //        'novus',
+  //        'rathena',
+  //        'gatsbyjs'
+  //
+  const projectName = 'rathena';
+  const dataName = 'data/viz_' + projectName + '.json';
+  const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
+  const svg = wrapper.append('svg').attr('id', 'graph');
+  wrapper.append('div').attr('class', 'slider');
+
+  d3.json(dataName, function(data) {
+    data = parseDateStrings(data);
+    data = castIntegers(data);
+
+    const netOpts = {
+      'svg': svg,
+      'linkType': 'all',
+      'showGroupColor': true,
+      'showLinkColor': false,
+    };
+
+    const title = new Title(data.info);
+    const net = new Network(data, netOpts);
+    const slider = new Slider(net);
+  });
+
+  function parseDateStrings(data) {
+    data.links.forEach(function(d) {
+      d.timestamp = moment(d.timestamp);
+    });
+    return data;
+  }
+
+  function castIntegers(data) {
+    data.nodes.forEach(function(d) {
+      d.id = +d.id;
+    });
+    data.links.forEach(function(d) {
+      d.source = +d.source;
+      d.target = +d.target;
+    });
+    return data;
+  }
+})();
+
+
