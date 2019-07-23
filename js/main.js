@@ -186,7 +186,7 @@ class Network {
         .data(this.current.links, function(d) {
           return d.link_id;
         });
-    
+
     // link exit selection
     this.select.linkPolygons.exit()
         .remove();
@@ -432,12 +432,16 @@ class Slider {
 
     this.dispatch
         .on('sliderChange', function() {
-          let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
+          const value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
           elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
 
           d3.selectAll('.s-chart-cursor')
               .attr('x', elem.sliderScale(value) + 'px');
+        });
 
+    this.dispatch
+        .on('sliderEnd', function() {
+          let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
           value = Math.round(value);
 
           const newDate = moment(value).startOf(elem.network.discreteInterval);
