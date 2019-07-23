@@ -627,90 +627,6 @@ class Title {
         .text(function(d) {
           return d;
         })
-<<<<<<< HEAD
-                .on("sliderEnd", function () {
-
-                    highlight(node, link)
-                })
-
-
-        highlight(node, link)
-
-        simulation
-                .nodes(nodes)
-                .on("tick", ticked)
-
-        simulation.force("link")
-                .links(links);
-        simulation
-                .force("charge", d3.forceManyBody().strength(chargeStrength))
-    }
-
-    function highlight(node, link) {
-        function activate(d, hoverNode) {
-            if (!highlightLocked) {
-                highlightActive = true
-
-                node.classed("node-active", function (o) {
-                    var isActive = isConnected(d, o) ? true : false;
-                    return isActive;
-                });
-                node.classed("node-passive", function (o) {
-                    var isPassive = isConnected(d, o) ? false : true;
-                    return isPassive;
-                })
-
-                link.classed("link-active", function (o) {
-                    return o.source === d || o.target === d ? true : false;
-                });
-                link.classed("link-passive", function (o) {
-                    return o.source === d || o.target === d ? false : true;
-                })
-
-                d3.select(hoverNode).classed("node-active", true);
-                d3.select(hoverNode).classed("node-passive", false);
-            }
-        }
-
-        function passivate() {
-            if (!highlightLocked) {
-                highlightActive = false
-
-                node.classed("node-active", false);
-                node.classed("node-passive", false)
-                link.classed("link-active", false);
-                link.classed("link-passive", false);
-            }
-        }
-
-        node
-            .on("mousedown", function (d) {
-                activate(d, this)
-                tooltip.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                tooltip.html(
-                        "id: " + d.name + "<br/>" + 
-                        "weight: " + d.weight + "<br/>" +
-                        "group: " + d.group)
-                        .style("left", (d3.event.pageX) + "px")
-                        .style("top", (d3.event.pageY - 28) + "px")
-            })
-            .on("mouseout", function (d) {
-                passivate()
-                tooltip.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-            })
-            .on("mouseup", function (d) {
-                if (!highlightLocked) {
-                    highlightLocked = true
-                } else {
-                    highlightLocked = false
-                    passivate()
-                }
-            })
-=======
         .attr('x', '20%')
         .attr('y', '66%');
   }
@@ -767,7 +683,6 @@ class InfoChart {
       }
 
       return numLinksData;
->>>>>>> oo
     }
 
     function calcNumGroups() {
