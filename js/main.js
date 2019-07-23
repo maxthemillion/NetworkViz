@@ -61,7 +61,14 @@ class Network {
     this.setDates();
     this.initNodePositions();
 
-    this.draw();
+    this.worker = new Worker(worker.js)
+    this.worker.onmessage = function (event) {
+      this.current.nodes = event.data.nodes;
+      this.current.links = event.data.links;
+      this.draw()
+    };
+
+    this.update(this.oldDate);
   }
 
   setSize() {
@@ -141,74 +148,61 @@ class Network {
   }
 
   draw() {
-    const elem = this;
-    // define simulation
-    this.simulation = d3.forceSimulation()
-        .force('y',
-            d3.forceX(this.chartWidth / 2).strength(0.4))
-        .force('x',
-            d3.forceY(this.chartHeight / 2).strength(0.6))
-        .force('charge', d3.forceManyBody().strength(this.forceProperties.chargeStrength))
-        .force('link',
-            d3.forceLink().id(
-                function(d) {
-                  return d.id;
-                }))
-        .force(
-            'collide',
-            d3.forceCollide(function(d) {
-              return d.r + elem.forceProperties.nodePadding;
-            })
-                .strength(this.forceProperties.collideStrength)
-                .iterations(this.forceProperties.collideIterations));
+    let transitionDuration = 500
 
-    this.simulation.alphaMin(0.01);
-    this.simulation.stop();
+    function linkKey () {
+        return d.source.id + '-' + d.target.id;
+    }
 
-
-    this.update(this.oldDate);
-  }
-
-  update(newDate) {
-    const elem = this;
-    newDate = newDate.add(this.offset, 'days');
-    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
-    this.updateLinkedByIndex(this.current.links);
-    this.calculateNodeWeight(this.data.nodes, this.current.links);
-    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
-    this.current.groups = this.f.filterGroups(this.groups, newDate);
-    this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
-
+    function nodeKey(n) {
+      return n.id;
+    }
 
     // link update
     this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
-        .data(this.current.links, function(d) {
-          return d.link_id;
-        });
+    .data(this.current.links, linkKey);
 
     // link exit selection
     this.select.linkPolygons.exit()
-        .remove();
+      .transition('exit-remove')
+      .duration(transitionDuration)
+      .attr('opacity', '0')
+      .remove();
 
     // link enter selection
     this.select.linkPolygons.enter()
         .append('line')
         .attr('class', 'linkPolygon')
+        .attr('x1', function (d) {return d.source.x})
+        .attr('y1', function (d) {return d.source.y})
+        .attr('x2', d => d.target.x)
+        .attr('y2', d => d.target.y)
         .style('stroke', function(d) {
           return elem.getLinkColor(d.rel_type);
         })
         .style('stroke-width', function(d) {
           return elem.linkWeightScale(d.weight);
-        });
+        })
+        .style('stroke-opacity', 0)
+
+    this.select.linkPolygons
+        .transition()
+        .duration(transitionDuration)
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y)
+        .attr("stroke-opacity", 0.2)
 
     // node update
     this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
-        .data(this.current.nodes, function(d) {
-          return d.id;
-        });
+        .data(this.current.nodes, nodeKey);
 
     // node exit selection
     this.select.nodeCircles.exit()
+        .transition('exit-remove')
+        .duration(transitionDuration)
+        .attr('opacity', 0)
         .remove();
 
     // node enter selection
@@ -221,38 +215,31 @@ class Network {
         })
         .style('fill', function(d) {
           return elem.getGroupColor(d.group);
-        });
+        })
+        .transition('shift-nodes')
+        .duration(transitionDuration)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y);
 
-    this.simulation.nodes(this.current.nodes);
-    this.simulation.force('link').links(this.current.links);
-
-    function ticked() {
-      d3.selectAll('.linkPolygon')
-          .attr('x1', function(d) {
-            return d.source.x;
-          })
-          .attr('y1', function(d) {
-            return d.source.y;
-          })
-          .attr('x2', function(d) {
-            return d.target.x;
-          })
-          .attr('y2', function(d) {
-            return d.target.y;
-          });
-
-      d3.selectAll('.nodeCircle')
-          .attr('cx', function(d) {
-            return d.x;
-          })
-          .attr('cy', function(d) {
-            return d.y;
-          });
-    }
-
-    this.simulation.on('tick', ticked);
-    this.simulation.alpha(1).restart();
     this.highlight();
+  }
+
+  update(newDate) {
+    const elem = this;
+    newDate = newDate.add(this.offset, 'days');
+    this.current.links = this.f.filterLinks(newDate, this.linkType, this.data.links);
+    this.updateLinkedByIndex(this.current.links);
+    this.calculateNodeWeight(this.data.nodes, this.current.links);
+    this.current.nodes = this.f.filterNodes(this.data.nodes, this.current.links);
+    this.current.groups = this.f.filterGroups(this.groups, newDate);
+    this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
+
+    this.worker.postMessage({
+      nodes: this.current.nodes,
+      links: this.current.links,
+      forceProperties: this.forceProperties,
+      chart: {width: this.chartWidth, height: this.chartHeight}
+    });
   }
 
   isConnected(a, b) {
