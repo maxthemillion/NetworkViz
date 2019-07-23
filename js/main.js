@@ -167,7 +167,6 @@ class Network {
 
 
     this.update(this.oldDate);
-    // this.highlight(this.select.nodes, this.select.links);
   }
 
   update(newDate) {
@@ -253,6 +252,7 @@ class Network {
 
     this.simulation.on('tick', ticked);
     this.simulation.alpha(1).restart();
+    this.highlight();
   }
 
   isConnected(a, b) {
@@ -279,26 +279,27 @@ class Network {
     });
   }
 
-  highlight(node, link) {
+  highlight() {
     const elem = this;
+
     function activate(d, hoverNode) {
       if (!elem.highlightLocked) {
         elem.highlightActive = true;
 
-        node.classed('node-active', function(o) {
+        elem.select.nodeCircles.classed('node-active', function(o) {
           const isActive = elem.isConnected(d, o) ? true : false;
           return isActive;
         });
 
-        node.classed('node-passive', function(o) {
+        elem.select.nodeCircles.classed('node-passive', function(o) {
           const isPassive = elem.isConnected(d, o) ? false : true;
           return isPassive;
         });
 
-        link.classed('link-active', function(o) {
+        elem.select.linkPolygons.classed('link-active', function(o) {
           return o.source === d || o.target === d ? true : false;
         });
-        link.classed('link-passive', function(o) {
+        elem.select.linkPolygons.classed('link-passive', function(o) {
           return o.source === d || o.target === d ? false : true;
         });
 
@@ -310,39 +311,32 @@ class Network {
     function passivate() {
       if (!elem.highlightLocked) {
         elem.highlightActive = false;
-        node.classed('node-active', false);
-        node.classed('node-passive', false);
-        link.classed('link-active', false);
-        link.classed('link-passive', false);
+        elem.select.nodeCircles.classed('node-active', false);
+        elem.select.nodeCircles.classed('node-passive', false);
+        elem.select.linkPolygons.classed('link-active', false);
+        elem.select.linkPolygons.classed('link-passive', false);
       }
     }
 
-    node.on('mouseover', function(d) {
-      activate(d, this);
-      tooltip.transition()
-          .duration(200)
-          .style('opacity', .9);
-      tooltip.html(
-          'id: ' + d.name + '<br/>' +
-        'weight: ' + d.weight + '<br/>' +
-        'group: ' + d.group)
-          .style('left', (d3.event.pageX) + 'px')
-          .style('top', (d3.event.pageY - 28) + 'px');
-    })
-        .on('mouseout', function(d) {
+    let tooltip
+    d3.selectAll('.nodeCircle')
+      .on('mouseover', function (d) {
+        activate(d, this);
+        tooltip = new Tooltip(this, d)
+      })
+      .on('mouseout', function (d) {
+        passivate();
+        tooltip.hide()
+      })
+
+      .on('mouseup', function (d) {
+        if (!elem.highlightLocked) {
+          elem.highlightLocked = true;
+        } else {
+          elem.highlightLocked = false;
           passivate();
-          tooltip.transition()
-              .duration(500)
-              .style('opacity', 0);
-        })
-        .on('mouseup', function(d) {
-          if (!highlightLocked) {
-            highlightLocked = true;
-          } else {
-            highlightLocked = false;
-            passivate();
-          }
-        });
+        }
+      });
   }
 
   reassignGroups(nodes, groups) {
@@ -419,7 +413,7 @@ class Slider {
   }
 
   dispatchEvents() {
-    this.dispatch = d3.dispatch('sliderChange', 'sliderEnd'); // define dispatch events
+    this.dispatch = d3.dispatch('sliderChange', 'sliderEnd');
 
     const elem = this;
     this.select.slider.call(d3.drag()
@@ -454,14 +448,7 @@ class Slider {
             d3.select(this).moveToFront();
           });
 
-
-          // TODO: where has this code part gone?
-          // TODO: call update function on network!
-          // TODO: do something in case the date has been changed!
         });
-    // .on('sliderEnd', function() {
-    //  elem.network.highlight(node, link);
-    // });
   }
 }
 
@@ -637,19 +624,40 @@ class Title {
 }
 
 class Tooltip {
-  constructor(element) {
-    element
-        .append('div')
-        .attr('class', 'tooltip')
-        .style('opacity', 0);
+  constructor(element, d) {
+    const data = ['id: '+d.name, 'group: '+d.group]
+
+
+    this.select = d3.select('#graph')
+      .append('text')
+      .attr('class', 'tooltip')
+      .selectAll('tspan')
+      .data(data)
+      .enter()
+      .append('tspan')
+      .attr('x', parseFloat(element.getAttribute('cx')) - 20 +'px')
+      .attr('y',parseFloat(element.getAttribute('cy')) - 20 +'px')
+      .attr('dx', '0')
+      .attr('dy', function (d, i) { return (1 * i - 1) + 'em'; })
+      .text(String)
+      .style('opacity', 0)
+
+    this.show()
   }
 
   show() {
-    this.style('opacity', 1);
+    this.select
+      .transition('tooltip-show')
+      .duration(200)  
+      .style('opacity', 0.9);
   }
 
   hide() {
-    this.style('opacity', 0);
+    this.select
+      .transition('tooltip-hide')
+      .duration(200)  
+      .style('opacity', 0)
+      .remove()
   }
 }
 
