@@ -148,7 +148,7 @@ class Network {
   }
 
   draw() {
-    let transitionDuration = 1000
+    let transitionDuration = 1500
     const elem = this;
 
     function linkKey(d) {
@@ -832,7 +832,7 @@ d3.selection.prototype.moveToFront = function () {
   //        'rathena',
   //        'gatsbyjs'
   //
-  const projectName = 'rathena';
+  const projectName = 'waffleio';
   const dataName = 'data/viz_' + projectName + '.json';
   const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
   const svg = wrapper.append('svg').attr('id', 'graph');
