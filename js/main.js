@@ -35,7 +35,7 @@ class Network {
     };
 
     this.forceProperties = {
-      'chargeStrength': -500,
+      'chargeStrength': -750,
       'nodePadding': 20,
       'collideStrength': 0.7,
       'collideIterations': 3,
@@ -190,21 +190,26 @@ class Network {
       .attr('y1', d => d.source.y)
       .attr('x2', d => d.target.x)
       .attr('y2', d => d.target.y)
+      .style('stroke-width', function (d) {
+        return elem.linkWeightScale(d.weight);
+      })
       .style('opacity', 0)
       .merge(this.select.linkPolygons)
       .style('stroke', function (d) {
         return elem.getLinkColor(d.rel_type);
       })
+      .transition()
+      .duration(transitionDuration)
       .style('stroke-width', function (d) {
         return elem.linkWeightScale(d.weight);
       })
-      .transition('shift-nodes')
+      .transition()
       .duration(transitionDuration)
       .attr("x1", d => d.source.x)
       .attr("y1", d => d.source.y)
       .attr("x2", d => d.target.x)
       .attr("y2", d => d.target.y)
-      .transition('appear-links')
+      .transition()
       .duration(transitionDuration)
       .style('opacity', 0.3)
 
