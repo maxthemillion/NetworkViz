@@ -7,6 +7,10 @@ body {
     font-family: Verdana, sans-serif;   
 }
 
+text {
+    fill: grey;
+}
+
 .content-wrapper {
     margin-top: 20px;
     margin-left: 10%;
@@ -113,14 +117,13 @@ p {
 }
 
 .slider-text {
-    position: relative;
-    margin-top: 10px;
+    position: absolute;
 }
 
 .slider-tray {
     position: absolute;
     width: 100%;
-    height: 6px;
+    height: 2px;
     border: solid 1px #ccc;
     border-top-color: #aaa;
     border-radius: 4px;
@@ -130,7 +133,6 @@ p {
 
 .slider-handle {
     position: absolute;
-    top: 3px;
 }
 
 .slider-handle-icon {
@@ -146,7 +148,8 @@ p {
 }
 
 .axis {
-    font-size: 0.5em
+    font-size: 0.5em;
+    color: grey;
 }
 
 .axis-main{

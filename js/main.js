@@ -15,6 +15,8 @@ class Network {
     this.projectName = opts.project;
     this.svg = opts.svg;
     this.linkType = opts.linkType;
+    this.chartWidth = opts.width
+    this.chartHeight = opts.height
 
     this.filtered = false;
     this.highlightLocked = false;
@@ -72,26 +74,14 @@ class Network {
   }
 
   setSize() {
-    this.clientWidth = document.querySelector('#graph').clientWidth;
-    this.clientHeight = document.querySelector('#graph').clientHeight;
-    this.margin = {
-      top: 0,
-      left: 0,
-      bottom: 0,
-      right: 0,
-    };
-
-    this.chartWidth = this.clientWidth - (this.margin.left + this.margin.right);
-    this.chartHeight = this.clientHeight - (this.margin.top + this.margin.bottom);
-
     this.svg
-      .attr('width', this.clientWidth)
-      .attr('height', this.clientHeight);
+      .attr('width', this.chartWidth)
+      .attr('height', this.chartHeight);
 
     this.chartLayer
       .attr('width', this.chartWidth)
       .attr('height', this.chartHeight)
-      .attr('transform', 'translate(' + [this.margin.left, this.margin.top] + ')');
+      .attr('transform', 'translate(' + [0,0] + ')');
   }
 
   setScales() {
@@ -116,8 +106,8 @@ class Network {
   initNodePositions() {
     const elem = this;
     this.nodes.forEach(function (d) {
-      d.x = elem.clientWidth / 2 + (Math.random() * 100 - 50);
-      d.y = elem.clientHeight / 2 + (Math.random() * 100 - 50);
+      d.x = elem.chartWidth / 2 + (Math.random() * 100 - 50);
+      d.y = elem.chartHeight / 2 + (Math.random() * 100 - 50);
     });
   }
 
@@ -140,7 +130,6 @@ class Network {
         })
       )
     );
-
     this.oldDate = moment(this.minDate);
     this.oldDate.startOf(this.discreteInterval);
 
@@ -662,7 +651,7 @@ class Tooltip {
 
 
 class TimeSeriesChart {
-  constructor(data) {
+  constructor(data, opts) {
     this.width = opts.width
     this.height = 150
     this.titleHeight = 30
@@ -672,14 +661,13 @@ class TimeSeriesChart {
   }
 
   draw(dataFunc) {
-
     const chartData = dataFunc(this.data)
     const domainMax = d3.max(chartData, d => d.num)
     const domainMin = d3.min(chartData, d => Math.min(d.num, 0))
 
     const x = d3.scaleTime()
       .range([0, this.width])
-      .domain([minDate, maxDate]); // is this info in the data?
+      .domain([this.minDate, this.maxDate]);
 
     const y = d3.scaleLinear()
       .range([this.height, 0])
@@ -689,7 +677,7 @@ class TimeSeriesChart {
       .x(d => x(d.date))
       .y(d => y(d.num))
 
-    const sChartWrapper = wrapper.append('svg')
+    const sChartWrapper = d3.select('.content-wrapper').append('svg')
       .attr('class', 's-chart-wrapper')
       .attr('width', this.width)
       .attr('height', this.height + this.titleHeight);
@@ -702,7 +690,7 @@ class TimeSeriesChart {
       .attr('x', 0)
       .attr('y', this.titleHeight / 2)
       .attr('text-anchor', 'left')
-      .text(title);
+      .text(this.title);
 
     const sChart = sChartWrapper
       .append('svg')
@@ -733,14 +721,13 @@ class TimeSeriesChart {
       .attr('class', 's-chart-cursor')
       .style('height', this.height);
   }
-
 }
 
 
 class ModularityChart extends TimeSeriesChart {
-  constructor(data) {
-    super(data)
-  
+  constructor(data, opts) {
+    super(data, opts)
+    this.title = 'Modularity'
     this.draw(this.readModularity)
   }
 
@@ -860,16 +847,21 @@ class GroupChart extends TimeSeriesChart{
     data = parseDateStrings(data);
     data = castIntegers(data);
 
-    const netOpts = {
+    const opts = {
       'svg': svg,
       'linkType': 'all',
       'showGroupColor': true,
       'showLinkColor': false,
+      'minDate':moment(Object.keys(data.groups).sort()[0]),
+      'maxDate':moment(Math.max.apply(Math,data.links.map(o => o.timestamp))),
+      'width': document.querySelector('#graph').clientWidth,
+      'height': document.querySelector('#graph').clientHeight,
     };
 
     const title = new Title(data.info);
-    const net = new Network(data, netOpts);
+    const net = new Network(data, opts);
     const slider = new Slider(net);
+    const modularityChart = new ModularityChart(data, opts)
   });
 
   function parseDateStrings(data) {
