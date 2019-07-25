@@ -81,7 +81,7 @@ class Network {
     this.chartLayer
       .attr('width', this.chartWidth)
       .attr('height', this.chartHeight)
-      .attr('transform', 'translate(' + [0,0] + ')');
+      .attr('transform', 'translate(' + [0, 0] + ')');
   }
 
   setScales() {
@@ -137,7 +137,7 @@ class Network {
   }
 
   draw() {
-    let transitionDuration = 1500
+    let transitionDuration = 1000
     const elem = this;
 
     function linkKey(d) {
@@ -653,7 +653,7 @@ class Tooltip {
 class TimeSeriesChart {
   constructor(data, opts) {
     this.width = opts.width
-    this.height = 150
+    this.height = 100
     this.titleHeight = 30
     this.data = data
     this.minDate = opts.minDate
@@ -723,7 +723,6 @@ class TimeSeriesChart {
   }
 }
 
-
 class ModularityChart extends TimeSeriesChart {
   constructor(data, opts) {
     super(data, opts)
@@ -743,8 +742,8 @@ class ModularityChart extends TimeSeriesChart {
   }
 }
 
-class NodeChart extends TimeSeriesChart{
-  constructor(data) {
+class NodeChart extends TimeSeriesChart {
+  constructor(data) {
     super(data)
 
     this.draw(calcNumNodes)
@@ -764,8 +763,8 @@ class NodeChart extends TimeSeriesChart{
   }
 }
 
-class LinkChart extends TimeSeriesChart{
-  constructor(data){
+class LinkChart extends TimeSeriesChart {
+  constructor(data) {
     super(data)
 
     this.draw(calcNumLinks)
@@ -785,8 +784,8 @@ class LinkChart extends TimeSeriesChart{
   }
 }
 
-class GroupChart extends TimeSeriesChart{
-  constructor(data){
+class GroupChart extends TimeSeriesChart {
+  constructor(data) {
     super(data)
     this.draw(calcNumGroups)
   }
@@ -816,53 +815,69 @@ class GroupChart extends TimeSeriesChart{
 
 }
 
-  // prototype function to move SVG elements to front
-  // TODO: move this to where it fits. not in global scope.
-  d3.selection.prototype.moveToFront = function () {
-    return this.each(function () {
-      this.parentNode.appendChild(this);
-    });
-  };
+// prototype function to move SVG elements to front
+// TODO: move this to where it fits. not in global scope.
+d3.selection.prototype.moveToFront = function () {
+  return this.each(function () {
+    this.parentNode.appendChild(this);
+  });
+};
 
 
 !(function main() {
-  // #### parameters Start ####
-  //
-  //        'OneDrive',
-  //        'waffleio',
-  //        'getnikola',
-  //        'Tribler',
-  //        'BobPalmer',
-  //        'novus',
-  //        'rathena',
-  //        'gatsbyjs'
-  //
-  const projectName = 'waffleio';
-  const dataName = 'data/viz_' + projectName + '.json';
-  const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
-  const svg = wrapper.append('svg').attr('id', 'graph');
-  wrapper.append('div').attr('class', 'slider');
 
-  d3.json(dataName, function (data) {
-    data = parseDateStrings(data);
-    data = castIntegers(data);
+  const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs']
+  let selected;
 
-    const opts = {
-      'svg': svg,
-      'linkType': 'all',
-      'showGroupColor': true,
-      'showLinkColor': false,
-      'minDate':moment(Object.keys(data.groups).sort()[0]),
-      'maxDate':moment(Math.max.apply(Math,data.links.map(o => o.timestamp))),
-      'width': document.querySelector('#graph').clientWidth,
-      'height': document.querySelector('#graph').clientHeight,
-    };
+  let dropdownChange = function () {
+    selected = d3.select(this).property('value'),
+    d3.selectAll('.content-wrapper').remove()
 
-    const title = new Title(data.info);
-    const net = new Network(data, opts);
-    const slider = new Slider(net);
-    const modularityChart = new ModularityChart(data, opts)
-  });
+    generatePage(selected);
+  };
+
+  const dropdown = d3.select("body")
+    .append("select")
+    .attr('class', 'dropdown')
+    .on("change", dropdownChange);
+
+  dropdown.selectAll("option")
+    .data(projectNames)
+    .enter()
+    .append("option")
+    .attr("value", d => d)
+    .text(d => d);
+
+
+  function generatePage(selected) { 
+    const dataName = 'data/viz_' + selected + '.json';
+    const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
+    const title = wrapper.append('div').attr('id', 'title')
+    const infobox = wrapper.append('div').attr('id', 'infobox')
+    const svg = wrapper.append('svg').attr('id', 'graph');
+    wrapper.append('div').attr('class', 'slider');
+
+    d3.json(dataName, function (data) {
+      data = parseDateStrings(data);
+      data = castIntegers(data);
+
+      const opts = {
+        'svg': svg,
+        'linkType': 'all',
+        'showGroupColor': true,
+        'showLinkColor': false,
+        'minDate': moment(Object.keys(data.groups).sort()[0]),
+        'maxDate': moment(Math.max.apply(Math, data.links.map(o => o.timestamp))),
+        'width': document.querySelector('#graph').clientWidth,
+        'height': document.querySelector('#graph').clientHeight,
+      };
+
+      const title = new Title(data.info);
+      const net = new Network(data, opts);
+      const slider = new Slider(net);
+      const modularityChart = new ModularityChart(data, opts)
+    });
+  }
 
   function parseDateStrings(data) {
     data.links.forEach(function (d) {
@@ -881,6 +896,9 @@ class GroupChart extends TimeSeriesChart{
     });
     return data;
   }
+
+  selected = d3.select('.dropdown').property('value')
+  generatePage(selected);
 })();
 
 
