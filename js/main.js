@@ -379,30 +379,31 @@ class Slider {
       .style('width', this.width + 'px')
       .style('height', '30px');
     //            .style("margin-left", margin.left + "px")
+
+    this.select.sliderAxisContainer = this.select.slider.append('div')
+      .attr('class', 'slider-text'); //irritating class name
+
+    this.select.sliderAxisContainer
+      .append('svg')
+      .attr('width', this.sliderWidth)
+      .append('g')
+      .attr('class', 'axis-main')
+      .attr('id', 'main')
+      .attr('transform', 'translate(0, 3)')
+      .call(
+        d3.axisBottom(this.sliderTimeScale)
+          .ticks(d3.timeMonth.every(6))
+          .tickFormat(d3.timeFormat('%b %y')));
+
     this.select.sliderTray = this.select.slider.append('div')
       .attr('class', 'slider-tray');
 
     this.select.sliderHandle = this.select.slider.append('div')
       .attr('class', 'slider-handle');
 
-    this.select.sliderAxisContainer = this.select.slider.append('div')
-      .attr('class', 'slider-text');
-
     this.select.sliderHandleIcon = this.select.sliderHandle.append('div')
       .attr('class', 'slider-handle-icon');
 
-    this.select.sliderAxisContainer
-      .append('svg')
-      .attr('width', this.sliderWidth)
-      .attr('heigt', 20)
-      .append('g')
-      .attr('class', 'axis-main')
-      .attr('id', 'main')
-      .attr('transform', 'translate(0, 8)')
-      .call(
-        d3.axisBottom(this.sliderTimeScale)
-          .ticks(d3.timeMonth.every(6))
-          .tickFormat(d3.timeFormat('%d %B %y')));
   }
 
   dispatchEvents() {
@@ -414,6 +415,7 @@ class Slider {
         elem.dispatch.call('sliderChange');
       })
       .on('end', function () {
+        elem.dispatch.call('sliderChange')
         elem.dispatch.call('sliderEnd');
       }));
 
@@ -590,7 +592,7 @@ class Title {
       .attr('y', '66%');
 
     const infoData =
-      [this.info.owner + ' ' + this.repo + 'consists of ' +
+      [this.info.owner + ' ' + this.info.repo + 'consists of ' +
         this.info.total_nodes + ' nodes with ' +
         this.info.total_links + ' links. ' +
         this.info.no_comments + ' comments have been analyzed.'];
@@ -654,7 +656,7 @@ class TimeSeriesChart {
   constructor(data, opts) {
     this.width = opts.width
     this.height = 100
-    this.titleHeight = 30
+    this.titleHeight = 0
     this.data = data
     this.minDate = opts.minDate
     this.maxDate = opts.maxDate
@@ -687,9 +689,10 @@ class TimeSeriesChart {
       .attr('width', this.width)
       .attr('height', this.titleHeight)
       .append('text')
-      .attr('x', 0)
-      .attr('y', this.titleHeight / 2)
-      .attr('text-anchor', 'left')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -(this.height+this.titleHeight))
+      .attr('y', -10)
+      .attr('text-anchor', 'right')
       .text(this.title);
 
     const sChart = sChartWrapper
@@ -716,6 +719,9 @@ class TimeSeriesChart {
       .attr('transform', 'translate(0,0)')
       .attr('class', 'axis')
       .call(d3.axisLeft(y).ticks(5));
+
+    sChart.selectAll('.domain').remove()
+    sChart.selectAll('.tick').remove()
 
     sChart.append('rect')
       .attr('class', 's-chart-cursor')
@@ -831,7 +837,7 @@ d3.selection.prototype.moveToFront = function () {
 
   let dropdownChange = function () {
     selected = d3.select(this).property('value'),
-    d3.selectAll('.content-wrapper').remove()
+      d3.selectAll('.content-wrapper').remove()
 
     generatePage(selected);
   };
@@ -849,7 +855,7 @@ d3.selection.prototype.moveToFront = function () {
     .text(d => d);
 
 
-  function generatePage(selected) { 
+  function generatePage(selected) {
     const dataName = 'data/viz_' + selected + '.json';
     const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
     const title = wrapper.append('div').attr('id', 'title')

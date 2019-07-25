@@ -110,8 +110,7 @@ p {
 
 .slider {
     position: relative;
-    margin-top: 20px;
-    margin-bottom: 50px;
+    margin-bottom: 20px;
 }
 
 .slider-text {
@@ -161,6 +160,8 @@ p {
 
 .s-chart-wrapper{
     margin-bottom: 40px;
+    background: #f3f2f2;
+    padding: 10px 5px 10px 5px;
 }
 
 .s-chart-cursor{
