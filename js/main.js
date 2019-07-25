@@ -53,7 +53,7 @@ class Network {
 
     const elem = this;
     this.getLinkColor = function (d) {
-      return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'grey';
+      return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'white';
     };
 
     this.getGroupColor = function (d) {
@@ -387,7 +387,7 @@ class Slider {
       .append('svg')
       .attr('width', this.sliderWidth)
       .append('g')
-      .attr('class', 'axis-main')
+      .attr('class', 'axis')
       .attr('id', 'main')
       .attr('transform', 'translate(0, 3)')
       .call(
@@ -570,7 +570,7 @@ class Filter {
   }
 }
 
-class Title {
+class InfoText {
   constructor(info) {
     this.info = info[0];
     this.titleString = 'Communication network of project ' + this.info.owner + ' ' + this.info.repo;
@@ -579,44 +579,25 @@ class Title {
   }
 
   draw() {
-    const title = d3.select('#title')
-      .selectAll('text')
-      .data([this.titleString])
-      .enter()
-      .append('h1');
-
-    title.text(function (d) {
-      return d;
-    })
-      .attr('x', '10%')
-      .attr('y', '66%');
-
     const infoData =
       [this.info.owner + ' ' + this.info.repo + 'consists of ' +
         this.info.total_nodes + ' nodes with ' +
         this.info.total_links + ' links. ' +
         this.info.no_comments + ' comments have been analyzed.'];
 
-    const infoText = d3.select('#infobox')
+    d3.select('#infobox')
       .selectAll('text')
       .data(infoData)
       .enter()
       .append('p')
-      .attr('class', 'infobox-text');
-
-    infoText
-      .text(function (d) {
-        return d;
-      })
-      .attr('x', '20%')
-      .attr('y', '66%');
+      .attr('class', 'infobox-text')
+      .text(d => d)
   }
 }
 
 class Tooltip {
   constructor(element, d) {
     const data = ['id: ' + d.name, 'group: ' + d.group]
-
 
     this.select = d3.select('#graph')
       .append('text')
@@ -629,7 +610,7 @@ class Tooltip {
       .attr('y', parseFloat(element.getAttribute('cy')) - 20 + 'px')
       .attr('dx', '0')
       .attr('dy', function (d, i) { return (1 * i - 1) + 'em'; })
-      .text(String)
+      .text(d => d)
       .style('opacity', 0)
 
     this.show()
@@ -690,7 +671,7 @@ class TimeSeriesChart {
       .attr('height', this.titleHeight)
       .append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('x', -(this.height+this.titleHeight))
+      .attr('x', -(this.height + this.titleHeight))
       .attr('y', -10)
       .attr('text-anchor', 'right')
       .text(this.title);
@@ -842,7 +823,7 @@ d3.selection.prototype.moveToFront = function () {
     generatePage(selected);
   };
 
-  const dropdown = d3.select("body")
+  const dropdown = d3.select("#dropdown")
     .append("select")
     .attr('class', 'dropdown')
     .on("change", dropdownChange);
@@ -857,9 +838,9 @@ d3.selection.prototype.moveToFront = function () {
 
   function generatePage(selected) {
     const dataName = 'data/viz_' + selected + '.json';
+
     const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
-    const title = wrapper.append('div').attr('id', 'title')
-    const infobox = wrapper.append('div').attr('id', 'infobox')
+    wrapper.append('div').attr('id', 'infobox')
     const svg = wrapper.append('svg').attr('id', 'graph');
     wrapper.append('div').attr('class', 'slider');
 
@@ -878,7 +859,7 @@ d3.selection.prototype.moveToFront = function () {
         'height': document.querySelector('#graph').clientHeight,
       };
 
-      const title = new Title(data.info);
+      //const infoText = new InfoText(data.info);
       const net = new Network(data, opts);
       const slider = new Slider(net);
       const modularityChart = new ModularityChart(data, opts)
