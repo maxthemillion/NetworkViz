@@ -192,8 +192,15 @@ p {
     background: #32323a;
     border-radius: 6px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     position:relative;
+}
+
+.s-chart-wrapper-centering{
+    display: flex;
+    height: 100%;
+    align-items: center;
+    margin: 0 auto;
 }
 
 .s-chart-area{
@@ -214,8 +221,8 @@ p {
     color: grey;
     position:absolute;
     transform: rotate(-90deg);
-    top: 40px;
-    left: -2em;
+    transform-origin: 0 100%;
+    left: -10px;
 }
 
 .tooltip {

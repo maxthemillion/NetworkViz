@@ -633,6 +633,8 @@ class TimeSeriesChart {
         .attr('height', this.height);
 
     const sChart = sChartWrapper
+        .append('div')
+        .attr('class', 's-chart-wrapper-centering')
         .append('svg')
         .attr('class', 's-chart-area')
         .append('g')
