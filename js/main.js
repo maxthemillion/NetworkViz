@@ -573,31 +573,6 @@ class Filter {
   }
 }
 
-class InfoText {
-  constructor(info) {
-    this.info = info[0];
-    this.titleString = 'Communication network of project ' + this.info.owner + ' ' + this.info.repo;
-
-    this.draw();
-  }
-
-  draw() {
-    const infoData =
-      [this.info.owner + ' ' + this.info.repo + 'consists of ' +
-        this.info.total_nodes + ' nodes with ' +
-        this.info.total_links + ' links. ' +
-        this.info.no_comments + ' comments have been analyzed.'];
-
-    d3.select('#infobox')
-        .selectAll('text')
-        .data(infoData)
-        .enter()
-        .append('p')
-        .attr('class', 'infobox-text')
-        .text((d) => d);
-  }
-}
-
 class Tooltip {
   constructor(element, d) {
     const data = ['id: ' + d.name, 'group: ' + d.group];
@@ -843,7 +818,6 @@ d3.selection.prototype.moveToFront = function() {
     const dataName = 'data/viz_' + selected + '.json';
 
     const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
-    wrapper.append('div').attr('id', 'infobox');
     const svg = wrapper.append('svg').attr('id', 'graph');
     wrapper.append('div').attr('class', 'slider');
 
