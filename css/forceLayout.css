@@ -193,7 +193,7 @@ p {
     border-radius: 6px;
     display: flex;
     align-items: center;
-
+    position:relative;
 }
 
 .s-chart-area{
@@ -208,6 +208,14 @@ p {
     fill: deepskyblue;
     position: absolute;
     opacity: 1;
+}
+
+.s-chart-title{
+    color: grey;
+    position:absolute;
+    transform: rotate(-90deg);
+    top: 40px;
+    left: -2em;
 }
 
 .tooltip {

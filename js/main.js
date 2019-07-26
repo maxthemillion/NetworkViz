@@ -638,6 +638,12 @@ class TimeSeriesChart {
         .append('g')
         .attr('transform', 'translate(0,' + this.titleHeight + ')');
 
+    sChartWrapper
+        .append('div')
+        .attr('class', 's-chart-title')
+        .data([this.title])
+        .text(d =>d);
+
     const x = d3.scaleTime()
         .range([0, d3.select('.s-chart-area').node().getBoundingClientRect().width])
         .domain([this.minDate, this.maxDate]);
