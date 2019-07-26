@@ -15,8 +15,8 @@ class Network {
     this.projectName = opts.project;
     this.svg = opts.svg;
     this.linkType = opts.linkType;
-    this.chartWidth = opts.width
-    this.chartHeight = opts.height
+    this.chartWidth = opts.width;
+    this.chartHeight = opts.height;
 
     this.filtered = false;
     this.highlightLocked = false;
@@ -52,22 +52,22 @@ class Network {
     this.setScales();
 
     const elem = this;
-    this.getLinkColor = function (d) {
+    this.getLinkColor = function(d) {
       return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'white';
     };
 
-    this.getGroupColor = function (d) {
+    this.getGroupColor = function(d) {
       return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'grey';
     };
 
     this.setDates();
     this.initNodePositions();
 
-    this.worker = new Worker('./js/worker.js')
-    this.worker.onmessage = function (event) {
+    this.worker = new Worker('./js/worker.js');
+    this.worker.onmessage = function(event) {
       elem.current.nodes = event.data.nodes;
       elem.current.links = event.data.links;
-      elem.draw()
+      elem.draw();
     };
 
     this.update(this.oldDate);
@@ -75,23 +75,23 @@ class Network {
 
   setSize() {
     this.svg
-      .attr('width', this.chartWidth)
-      .attr('height', this.chartHeight);
+        .attr('width', this.chartWidth)
+        .attr('height', this.chartHeight);
 
     this.chartLayer
-      .attr('width', this.chartWidth)
-      .attr('height', this.chartHeight)
-      .attr('transform', 'translate(' + [0, 0] + ')');
+        .attr('width', this.chartWidth)
+        .attr('height', this.chartHeight)
+        .attr('transform', 'translate(' + [0, 0] + ')');
   }
 
   setScales() {
     this.nodeRadiusScale = d3.scaleLinear()
-      .domain([1, 200])
-      .range([this.nodeProperties.r_min, this.nodeProperties.r_max]);
+        .domain([1, 200])
+        .range([this.nodeProperties.r_min, this.nodeProperties.r_max]);
 
     this.linkWeightScale = d3.scaleLinear()
-      .domain([1, 100])
-      .range([this.linkProperties.width_min, this.linkProperties.width_max]);
+        .domain([1, 100])
+        .range([this.linkProperties.width_min, this.linkProperties.width_max]);
 
     this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10);
     this.groupColorScale = d3.scaleOrdinal(d3.schemeCategory20);
@@ -99,13 +99,13 @@ class Network {
 
   appendChartLayer() {
     this.chartLayer = this.svg
-      .append('g')
-      .attr('class', 'chartLayer');
+        .append('g')
+        .attr('class', 'chartLayer');
   }
 
   initNodePositions() {
     const elem = this;
-    this.nodes.forEach(function (d) {
+    this.nodes.forEach(function(d) {
       d.x = elem.chartWidth / 2 + (Math.random() * 100 - 50);
       d.y = elem.chartHeight / 2 + (Math.random() * 100 - 50);
     });
@@ -123,12 +123,12 @@ class Network {
      */
     this.minDate = moment(Object.keys(this.groups).sort()[0]);
     this.maxDate = moment(
-      Math.max.apply(
-        Math,
-        this.links.map(function (o) {
-          return o.timestamp;
-        })
-      )
+        Math.max.apply(
+            Math,
+            this.links.map(function(o) {
+              return o.timestamp;
+            })
+        )
     );
     this.oldDate = moment(this.minDate);
     this.oldDate.startOf(this.discreteInterval);
@@ -137,11 +137,11 @@ class Network {
   }
 
   draw() {
-    let transitionDuration = 1000
+    const transitionDuration = 1000;
     const elem = this;
 
     function linkKey(d) {
-      return d.link_id
+      return d.link_id;
     }
 
     function nodeKey(d) {
@@ -150,83 +150,87 @@ class Network {
 
     // link update
     this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
-      .data(this.current.links, linkKey);
+        .data(this.current.links, linkKey);
 
     // node update
     this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
-      .data(this.current.nodes, nodeKey);
+        .data(this.current.nodes, nodeKey);
 
     // step 1: remove exit selections
     // node exit selection
     this.select.nodeCircles.exit()
-      .transition()
-      .duration(function (d) { return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration })
-      .style('opacity', 0)
-      .remove();
+        .transition()
+        .duration(function(d) {
+          return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration;
+        })
+        .style('opacity', 0)
+        .remove();
 
     // link exit selection
     this.select.linkPolygons.exit()
-      .transition()
-      .duration(function (d) { return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration })
-      .style('opacity', 0)
-      .remove();
+        .transition()
+        .duration(function(d) {
+          return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration;
+        })
+        .style('opacity', 0)
+        .remove();
 
-    //step 2: change position of current and new elements
+    // step 2: change position of current and new elements
     this.select.linkPolygons.enter()
-      .append('line')
-      .attr('class', 'linkPolygon')
-      .attr('x1', d => d.source.x)
-      .attr('y1', d => d.source.y)
-      .attr('x2', d => d.target.x)
-      .attr('y2', d => d.target.y)
-      .style('stroke-width', function (d) {
-        return elem.linkWeightScale(d.weight);
-      })
-      .style('opacity', 0)
-      .merge(this.select.linkPolygons)
-      .style('stroke', function (d) {
-        return elem.getLinkColor(d.rel_type);
-      })
-      .transition()
-      .duration(transitionDuration)
-      .style('stroke-width', function (d) {
-        return elem.linkWeightScale(d.weight);
-      })
-      .transition()
-      .duration(transitionDuration)
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y)
-      .transition()
-      .duration(transitionDuration)
-      .style('opacity', 0.3)
+        .append('line')
+        .attr('class', 'linkPolygon')
+        .attr('x1', (d) => d.source.x)
+        .attr('y1', (d) => d.source.y)
+        .attr('x2', (d) => d.target.x)
+        .attr('y2', (d) => d.target.y)
+        .style('stroke-width', function(d) {
+          return elem.linkWeightScale(d.weight);
+        })
+        .style('opacity', 0)
+        .merge(this.select.linkPolygons)
+        .style('stroke', function(d) {
+          return elem.getLinkColor(d.rel_type);
+        })
+        .transition()
+        .duration(transitionDuration)
+        .style('stroke-width', function(d) {
+          return elem.linkWeightScale(d.weight);
+        })
+        .transition()
+        .duration(transitionDuration)
+        .attr('x1', (d) => d.source.x)
+        .attr('y1', (d) => d.source.y)
+        .attr('x2', (d) => d.target.x)
+        .attr('y2', (d) => d.target.y)
+        .transition()
+        .duration(transitionDuration)
+        .style('opacity', 0.3);
 
 
     // node enter selection
     this.select.nodeCircles.enter()
-      .append('circle')
-      .attr('class', 'nodeCircle')
-      .style('opacity', 0)
-      .merge(this.select.nodeCircles)
-      .each(function () {
-        d3.select(this).moveToFront();
-      })
-      .transition()
-      .duration(transitionDuration)
-      .attr('r', function (d) {
-        return elem.nodeRadiusScale(d.weight);
-      })
-      .style('fill', function (d) {
-        return elem.getGroupColor(d.group);
-      })
-      .transition()
-      .duration(transitionDuration)
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .transition()
-      .duration(transitionDuration)
-      .style('opacity', 1)
+        .append('circle')
+        .attr('class', 'nodeCircle')
+        .style('opacity', 0)
+        .merge(this.select.nodeCircles)
+        .each(function() {
+          d3.select(this).moveToFront();
+        })
+        .transition()
+        .duration(transitionDuration)
+        .attr('r', function(d) {
+          return elem.nodeRadiusScale(d.weight);
+        })
+        .style('fill', function(d) {
+          return elem.getGroupColor(d.group);
+        })
+        .transition()
+        .duration(transitionDuration)
+        .attr('cx', (d) => d.x)
+        .attr('cy', (d) => d.y)
+        .transition()
+        .duration(transitionDuration)
+        .style('opacity', 1);
 
 
     this.highlight();
@@ -245,7 +249,7 @@ class Network {
       nodes: this.current.nodes,
       links: this.current.links,
       forceProperties: this.forceProperties,
-      chart: { width: this.chartWidth, height: this.chartHeight }
+      chart: {width: this.chartWidth, height: this.chartHeight},
     });
   }
 
@@ -254,8 +258,8 @@ class Network {
   }
 
   calculateNodeWeight(node, link) {
-    node.forEach(function (d) {
-      d.weight = link.filter(function (l) {
+    node.forEach(function(d) {
+      d.weight = link.filter(function(l) {
         return l.source === d.id || l.target === d.id;
       }).length;
     });
@@ -264,7 +268,7 @@ class Network {
   updateLinkedByIndex(linksSelection) {
     this.linkedByIndex = {};
     const elem = this;
-    linksSelection.forEach(function (d) {
+    linksSelection.forEach(function(d) {
       if ((typeof d.source) === 'object') {
         elem.linkedByIndex[d.source.id + ',' + d.target.id] = 1;
       } else {
@@ -280,20 +284,20 @@ class Network {
       if (!elem.highlightLocked) {
         elem.highlightActive = true;
 
-        elem.select.nodeCircles.classed('node-active', function (o) {
+        elem.select.nodeCircles.classed('node-active', function(o) {
           const isActive = elem.isConnected(d, o) ? true : false;
           return isActive;
         });
 
-        elem.select.nodeCircles.classed('node-passive', function (o) {
+        elem.select.nodeCircles.classed('node-passive', function(o) {
           const isPassive = elem.isConnected(d, o) ? false : true;
           return isPassive;
         });
 
-        elem.select.linkPolygons.classed('link-active', function (o) {
+        elem.select.linkPolygons.classed('link-active', function(o) {
           return o.source === d || o.target === d ? true : false;
         });
-        elem.select.linkPolygons.classed('link-passive', function (o) {
+        elem.select.linkPolygons.classed('link-passive', function(o) {
           return o.source === d || o.target === d ? false : true;
         });
 
@@ -312,32 +316,32 @@ class Network {
       }
     }
 
-    let tooltip
+    let tooltip;
     d3.selectAll('.nodeCircle')
-      .on('mouseover', function (d) {
-        activate(d, this);
-        tooltip = new Tooltip(this, d)
-      })
-      .on('mouseout', function (d) {
-        passivate();
-        tooltip.hide()
-      })
-
-      .on('mouseup', function (d) {
-        if (!elem.highlightLocked) {
-          elem.highlightLocked = true;
-        } else {
-          elem.highlightLocked = false;
+        .on('mouseover', function(d) {
+          activate(d, this);
+          tooltip = new Tooltip(this, d);
+        })
+        .on('mouseout', function(d) {
           passivate();
-        }
-      });
+          tooltip.hide();
+        })
+
+        .on('mouseup', function(d) {
+          if (!elem.highlightLocked) {
+            elem.highlightLocked = true;
+          } else {
+            elem.highlightLocked = false;
+            passivate();
+          }
+        });
   }
 
   reassignGroups(nodes, groups) {
     if (groups !== undefined) {
       const nodeIDs = Object.keys(groups);
 
-      nodeIDs.forEach(function (d) {
+      nodeIDs.forEach(function(d) {
         const _d = +d;
         const nextNode = nodes.find((x) => x.id === _d);
         if (nextNode !== undefined) {
@@ -360,13 +364,13 @@ class Slider {
     this.maxDate = this.network.maxDate;
 
     this.sliderTimeScale = d3.scaleTime()
-      .range([0, this.width])
-      .domain([this.minDate, this.maxDate]);
+        .range([0, this.width])
+        .domain([this.minDate, this.maxDate]);
 
     this.sliderScale = d3.scaleLinear()
-      .domain([this.minDate, this.maxDate])
-      .range([0, this.width])
-      .clamp(true);
+        .domain([this.minDate, this.maxDate])
+        .range([0, this.width])
+        .clamp(true);
 
     this.select = {};
 
@@ -376,34 +380,33 @@ class Slider {
 
   setStyle() {
     this.select.slider = d3.select('.slider')
-      .style('width', this.width + 'px')
-      .style('height', '30px');
+        .style('width', this.width + 'px')
+        .style('height', '30px');
     //            .style("margin-left", margin.left + "px")
 
     this.select.sliderAxisContainer = this.select.slider.append('div')
-      .attr('class', 'slider-text'); //irritating class name
+        .attr('class', 'slider-text'); // irritating class name
 
     this.select.sliderAxisContainer
-      .append('svg')
-      .attr('width', this.sliderWidth)
-      .append('g')
-      .attr('class', 'axis')
-      .attr('id', 'main')
-      .attr('transform', 'translate(0, 3)')
-      .call(
-        d3.axisBottom(this.sliderTimeScale)
-          .ticks(d3.timeMonth.every(6))
-          .tickFormat(d3.timeFormat('%b %y')));
+        .append('svg')
+        .attr('width', this.sliderWidth)
+        .append('g')
+        .attr('class', 'axis')
+        .attr('id', 'main')
+        .attr('transform', 'translate(0, 3)')
+        .call(
+            d3.axisBottom(this.sliderTimeScale)
+                .ticks(d3.timeMonth.every(6))
+                .tickFormat(d3.timeFormat('%b %y')));
 
     this.select.sliderTray = this.select.slider.append('div')
-      .attr('class', 'slider-tray');
+        .attr('class', 'slider-tray');
 
     this.select.sliderHandle = this.select.slider.append('div')
-      .attr('class', 'slider-handle');
+        .attr('class', 'slider-handle');
 
     this.select.sliderHandleIcon = this.select.sliderHandle.append('div')
-      .attr('class', 'slider-handle-icon');
-
+        .attr('class', 'slider-handle-icon');
   }
 
   dispatchEvents() {
@@ -411,34 +414,34 @@ class Slider {
 
     const elem = this;
     this.select.slider.call(d3.drag()
-      .on('drag', function () {
-        elem.dispatch.call('sliderChange');
-      })
-      .on('end', function () {
-        elem.dispatch.call('sliderChange')
-        elem.dispatch.call('sliderEnd');
-      }));
+        .on('drag', function() {
+          elem.dispatch.call('sliderChange');
+        })
+        .on('end', function() {
+          elem.dispatch.call('sliderChange');
+          elem.dispatch.call('sliderEnd');
+        }));
 
     this.dispatch
-      .on('sliderChange', function () {
-        const value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
-        elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
+        .on('sliderChange', function() {
+          const value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
+          elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
 
-        d3.selectAll('.s-chart-cursor')
-          .attr('x', elem.sliderScale(value) + 'px');
-      });
+          d3.selectAll('.s-chart-cursor')
+              .attr('x', elem.sliderScale(value) + 'px');
+        });
 
     this.dispatch
-      .on('sliderEnd', function () {
-        let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
-        value = Math.round(value);
+        .on('sliderEnd', function() {
+          let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
+          value = Math.round(value);
 
-        const newDate = moment(value).startOf(elem.network.discreteInterval);
-        if (!newDate.isSame(elem.oldDate)) {
-          elem.oldDate = moment(newDate);
-          elem.network.update(newDate);
-        }
-      });
+          const newDate = moment(value).startOf(elem.network.discreteInterval);
+          if (!newDate.isSame(elem.oldDate)) {
+            elem.oldDate = moment(newDate);
+            elem.network.update(newDate);
+          }
+        });
   }
 }
 
@@ -451,7 +454,7 @@ class Filter {
   filterNodes(nodes, links) {
     const linkedNodes = {};
 
-    links.forEach(function (d) {
+    links.forEach(function(d) {
       if ((typeof d.source) === 'object') {
         linkedNodes[d.source.id] = 1;
         linkedNodes[d.target.id] = 1;
@@ -461,12 +464,12 @@ class Filter {
       }
     });
 
-    const filteredNodes = nodes.filter(function (d) {
+    const filteredNodes = nodes.filter(function(d) {
       return linkedNodes[d.id] === 1;
     });
 
     const nodeIds = Object.keys(linkedNodes);
-    nodeIds.forEach(function (d) {
+    nodeIds.forEach(function(d) {
       const res = nodes.find((x) => x.id === +d);
       if (res === undefined) {
         console.log('node missing ' + d);
@@ -504,16 +507,16 @@ class Filter {
     date = moment(date);
     const minDate = moment(date).subtract(this.linkInterval, 'days');
     links = links.filter(
-      function (d) {
-        return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
-      }
+        function(d) {
+          return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
+        }
     );
 
     return links;
   }
 
   _forType(linkType, links) {
-    links = links.filter(function (d) {
+    links = links.filter(function(d) {
       if (linkType === 'all') {
         return true;
       } else {
@@ -527,21 +530,21 @@ class Filter {
   _consolidate(links) {
     const elem = this;
     const linkMap = d3.nest()
-      .key(function (d) {
-        return elem.showLinkColor ? d.rel_type : 'grey';
-      })
-      .key(function (d) {
-        return d.source;
-      })
-      .key(function (d) {
-        return d.target;
-      })
-      .rollup(function (values) {
-        return d3.sum(values, function (d) {
-          return 1;
-        });
-      })
-      .object(links);
+        .key(function(d) {
+          return elem.showLinkColor ? d.rel_type : 'grey';
+        })
+        .key(function(d) {
+          return d.source;
+        })
+        .key(function(d) {
+          return d.target;
+        })
+        .rollup(function(values) {
+          return d3.sum(values, function(d) {
+            return 1;
+          });
+        })
+        .object(links);
 
     // TODO: There should be a much cleaner way to solve this...
     // probably i could flatten the object like this:
@@ -586,135 +589,137 @@ class InfoText {
         this.info.no_comments + ' comments have been analyzed.'];
 
     d3.select('#infobox')
-      .selectAll('text')
-      .data(infoData)
-      .enter()
-      .append('p')
-      .attr('class', 'infobox-text')
-      .text(d => d)
+        .selectAll('text')
+        .data(infoData)
+        .enter()
+        .append('p')
+        .attr('class', 'infobox-text')
+        .text((d) => d);
   }
 }
 
 class Tooltip {
   constructor(element, d) {
-    const data = ['id: ' + d.name, 'group: ' + d.group]
+    const data = ['id: ' + d.name, 'group: ' + d.group];
 
     this.select = d3.select('#graph')
-      .append('text')
-      .attr('class', 'tooltip')
-      .selectAll('tspan')
-      .data(data)
-      .enter()
-      .append('tspan')
-      .attr('x', parseFloat(element.getAttribute('cx')) - 20 + 'px')
-      .attr('y', parseFloat(element.getAttribute('cy')) - 20 + 'px')
-      .attr('dx', '0')
-      .attr('dy', function (d, i) { return (1 * i - 1) + 'em'; })
-      .text(d => d)
-      .style('opacity', 0)
+        .append('text')
+        .attr('class', 'tooltip')
+        .selectAll('tspan')
+        .data(data)
+        .enter()
+        .append('tspan')
+        .attr('x', parseFloat(element.getAttribute('cx')) - 20 + 'px')
+        .attr('y', parseFloat(element.getAttribute('cy')) - 20 + 'px')
+        .attr('dx', '0')
+        .attr('dy', function(d, i) {
+          return (1 * i - 1) + 'em';
+        })
+        .text((d) => d)
+        .style('opacity', 0);
 
-    this.show()
+    this.show();
   }
 
   show() {
     this.select
-      .transition('tooltip-show')
-      .duration(200)
-      .style('opacity', 0.9);
+        .transition('tooltip-show')
+        .duration(200)
+        .style('opacity', 0.9);
   }
 
   hide() {
     this.select
-      .transition('tooltip-hide')
-      .duration(200)
-      .style('opacity', 0)
-      .remove()
+        .transition('tooltip-hide')
+        .duration(200)
+        .style('opacity', 0)
+        .remove();
   }
 }
 
 
 class TimeSeriesChart {
   constructor(data, opts) {
-    this.width = opts.width
-    this.height = 100
-    this.titleHeight = 0
-    this.data = data
-    this.minDate = opts.minDate
-    this.maxDate = opts.maxDate
+    this.width = opts.width;
+    this.height = 100;
+    this.titleHeight = 0;
+    this.data = data;
+    this.minDate = opts.minDate;
+    this.maxDate = opts.maxDate;
   }
 
   draw(dataFunc) {
-    const chartData = dataFunc(this.data)
-    const domainMax = d3.max(chartData, d => d.num)
-    const domainMin = d3.min(chartData, d => Math.min(d.num, 0))
+    const chartData = dataFunc(this.data);
+    const domainMax = d3.max(chartData, (d) => d.num);
+    const domainMin = d3.min(chartData, (d) => Math.min(d.num, 0));
 
     const x = d3.scaleTime()
-      .range([0, this.width])
-      .domain([this.minDate, this.maxDate]);
+        .range([0, this.width])
+        .domain([this.minDate, this.maxDate]);
 
     const y = d3.scaleLinear()
-      .range([this.height, 0])
-      .domain([domainMin, domainMax]);
+        .range([this.height, 0])
+        .domain([domainMin, domainMax]);
 
     const valueline = d3.line()
-      .x(d => x(d.date))
-      .y(d => y(d.num))
+        .x((d) => x(d.date))
+        .y((d) => y(d.num));
 
     const sChartWrapper = d3.select('.content-wrapper').append('svg')
-      .attr('class', 's-chart-wrapper')
-      .attr('width', this.width)
-      .attr('height', this.height + this.titleHeight);
+        .attr('class', 's-chart-wrapper')
+        .attr('width', this.width)
+        .attr('height', this.height + this.titleHeight);
 
     sChartWrapper.append('svg')
-      .attr('class', 's-chart-title')
-      .attr('width', this.width)
-      .attr('height', this.titleHeight)
-      .append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('x', -(this.height + this.titleHeight))
-      .attr('y', -10)
-      .attr('text-anchor', 'right')
-      .text(this.title);
+        .attr('class', 's-chart-title')
+        .attr('width', this.width)
+        .attr('height', this.titleHeight)
+        .append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -(this.height + this.titleHeight))
+        .attr('y', -10)
+        .attr('text-anchor', 'right')
+        .text(this.title);
 
     const sChart = sChartWrapper
-      .append('svg')
-      .attr('width', this.width)
-      .attr('height', this.height)
-      .attr('class', 's-chart')
-      .append('g')
-      .attr('transform', 'translate(0,' + this.titleHeight + ')');
+        .append('svg')
+        .attr('width', this.width)
+        .attr('height', this.height)
+        .attr('class', 's-chart')
+        .append('g')
+        .attr('transform', 'translate(0,' + this.titleHeight + ')');
 
     sChart.append('path')
-      .attr('class', 'chartLine')
-      .attr('d', valueline(chartData));
+        .attr('class', 'chartLine')
+        .attr('d', valueline(chartData));
 
     sChart.append('g')
-      .attr('transform', 'translate(0,' + this.height + ')')
-      .attr('class', 'axis')
-      .call(
-        d3.axisBottom(x)
-          .ticks(d3.timeMonth.every(6))
-          .tickFormat(d3.timeFormat('%d %B %y')));
+        .attr('transform', 'translate(0,' + this.height + ')')
+        .attr('class', 'axis')
+        .call(
+            d3.axisBottom(x)
+                .ticks(d3.timeMonth.every(6))
+                .tickFormat(d3.timeFormat('%d %B %y')));
 
     sChart.append('g')
-      .attr('transform', 'translate(0,0)')
-      .attr('class', 'axis')
-      .call(d3.axisLeft(y).ticks(5));
+        .attr('transform', 'translate(0,0)')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(y).ticks(5));
 
-    sChart.selectAll('.domain').remove()
-    sChart.selectAll('.tick').remove()
+    sChart.selectAll('.domain').remove();
+    sChart.selectAll('.tick').remove();
 
     sChart.append('rect')
-      .attr('class', 's-chart-cursor')
-      .style('height', this.height);
+        .attr('class', 's-chart-cursor')
+        .style('height', this.height);
   }
 }
 
 class ModularityChart extends TimeSeriesChart {
   constructor(data, opts) {
-    super(data, opts)
-    this.title = 'Modularity'
-    this.draw(this.readModularity)
+    super(data, opts);
+    this.title = 'Modularity';
+    this.draw(this.readModularity);
   }
 
   readModularity(data) {
@@ -722,7 +727,7 @@ class ModularityChart extends TimeSeriesChart {
     const keys = Object.keys(data.modularity).sort();
 
     for (let i = 0; i < keys.length; ++i) {
-      modularityData.push({ 'date': moment(keys[i]), 'num': +data.modularity[keys[i]] });
+      modularityData.push({'date': moment(keys[i]), 'num': +data.modularity[keys[i]]});
     }
 
     return modularityData;
@@ -731,19 +736,19 @@ class ModularityChart extends TimeSeriesChart {
 
 class NodeChart extends TimeSeriesChart {
   constructor(data) {
-    super(data)
+    super(data);
 
-    this.draw(calcNumNodes)
+    this.draw(calcNumNodes);
   }
 
   calcNumNodes(data) {
-    let cDate = moment(elem.minDate);
+    const cDate = moment(elem.minDate);
     const numNodesData = [];
 
     while (cDate.isSameOrBefore(maxDate)) {
       const linkSelection = elem.filter.filterLinks(elem.data.links, cDate, elm.linkTypeSelected); // function is only defined inside class Network.
       const nodeSelection = elem.filter.filterNodes(elem.data.nodes, linkSelection);
-      numNodesData.push({ 'date': moment(cDate), 'num': nodeSelection.length });
+      numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
       cDate.add(1, sliderInterval); // TODO: sliderinterval only exists as discreteInterval within network class
     }
     return numNodesData;
@@ -752,18 +757,18 @@ class NodeChart extends TimeSeriesChart {
 
 class LinkChart extends TimeSeriesChart {
   constructor(data) {
-    super(data)
+    super(data);
 
-    this.draw(calcNumLinks)
+    this.draw(calcNumLinks);
   }
 
   calcNumLinks(data) {
-    let cDate = moment(minDate);
+    const cDate = moment(minDate);
     const numLinksData = [];
 
     while (cDate.isSameOrBefore(maxDate)) {
       const linkSelection = filterAndConsolidate(data.links, cDate, 'All');
-      numLinksData.push({ 'date': moment(cDate), 'num': linkSelection.length });
+      numLinksData.push({'date': moment(cDate), 'num': linkSelection.length});
       cDate.add(1, sliderInterval);
     }
 
@@ -773,8 +778,8 @@ class LinkChart extends TimeSeriesChart {
 
 class GroupChart extends TimeSeriesChart {
   constructor(data) {
-    super(data)
-    this.draw(calcNumGroups)
+    super(data);
+    this.draw(calcNumGroups);
   }
 
   calcNumGroups(data) {
@@ -794,57 +799,55 @@ class GroupChart extends TimeSeriesChart {
         count = unique.length;
       }
 
-      numGroupsData.push({ 'date': moment(cDate), 'num': count });
+      numGroupsData.push({'date': moment(cDate), 'num': count});
       cDate.add(1, sliderInterval);
     }
     return numGroupsData;
   }
-
 }
 
 // prototype function to move SVG elements to front
 // TODO: move this to where it fits. not in global scope.
-d3.selection.prototype.moveToFront = function () {
-  return this.each(function () {
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function() {
     this.parentNode.appendChild(this);
   });
 };
 
 
 !(function main() {
-
-  const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs']
+  const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
   let selected;
 
-  let dropdownChange = function () {
+  const dropdownChange = function() {
     selected = d3.select(this).property('value'),
-      d3.selectAll('.content-wrapper').remove()
+    d3.selectAll('.content-wrapper').remove();
 
     generatePage(selected);
   };
 
-  const dropdown = d3.select("#dropdown")
-    .append("select")
-    .attr('class', 'dropdown')
-    .on("change", dropdownChange);
+  const dropdown = d3.select('#dropdown')
+      .append('select')
+      .attr('class', 'dropdown')
+      .on('change', dropdownChange);
 
-  dropdown.selectAll("option")
-    .data(projectNames)
-    .enter()
-    .append("option")
-    .attr("value", d => d)
-    .text(d => d);
+  dropdown.selectAll('option')
+      .data(projectNames)
+      .enter()
+      .append('option')
+      .attr('value', (d) => d)
+      .text((d) => d);
 
 
   function generatePage(selected) {
     const dataName = 'data/viz_' + selected + '.json';
 
     const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
-    wrapper.append('div').attr('id', 'infobox')
+    wrapper.append('div').attr('id', 'infobox');
     const svg = wrapper.append('svg').attr('id', 'graph');
     wrapper.append('div').attr('class', 'slider');
 
-    d3.json(dataName, function (data) {
+    d3.json(dataName, function(data) {
       data = parseDateStrings(data);
       data = castIntegers(data);
 
@@ -854,37 +857,36 @@ d3.selection.prototype.moveToFront = function () {
         'showGroupColor': true,
         'showLinkColor': false,
         'minDate': moment(Object.keys(data.groups).sort()[0]),
-        'maxDate': moment(Math.max.apply(Math, data.links.map(o => o.timestamp))),
+        'maxDate': moment(Math.max.apply(Math, data.links.map((o) => o.timestamp))),
         'width': document.querySelector('#graph').clientWidth,
         'height': document.querySelector('#graph').clientHeight,
       };
 
-      //const infoText = new InfoText(data.info);
       const net = new Network(data, opts);
-      const slider = new Slider(net);
-      const modularityChart = new ModularityChart(data, opts)
+      new Slider(net);
+      new ModularityChart(data, opts);
     });
   }
 
   function parseDateStrings(data) {
-    data.links.forEach(function (d) {
+    data.links.forEach(function(d) {
       d.timestamp = moment(d.timestamp);
     });
     return data;
   }
 
   function castIntegers(data) {
-    data.nodes.forEach(function (d) {
+    data.nodes.forEach(function(d) {
       d.id = +d.id;
     });
-    data.links.forEach(function (d) {
+    data.links.forEach(function(d) {
       d.source = +d.source;
       d.target = +d.target;
     });
     return data;
   }
 
-  selected = d3.select('.dropdown').property('value')
+  selected = d3.select('.dropdown').property('value');
   generatePage(selected);
 })();
 
