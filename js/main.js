@@ -624,7 +624,7 @@ class TimeSeriesChart {
   }
 
   draw(dataFunc) {
-    const chartData = dataFunc(this.data);
+    const chartData = dataFunc(this.data, this);
     const domainMax = d3.max(chartData, (d) => d.num);
     const domainMin = d3.min(chartData, (d) => Math.min(d.num, 0));
 
@@ -682,7 +682,7 @@ class TimeSeriesChart {
     sChart.selectAll('.tick line').remove();
     sChart.selectAll('.tick text').attr('x', -6);
 
-    d3.select('.s-chart-area').append('rect')
+    d3.selectAll('.s-chart-area').append('rect')
         .attr('class', 's-chart-cursor')
         .style('height', d3.select('.s-chart-area').node().getBoundingClientRect().height);
   }
@@ -692,6 +692,7 @@ class ModularityChart extends TimeSeriesChart {
   constructor(data, opts) {
     super(data, opts);
     this.title = 'Modularity';
+
     this.draw(this.readModularity);
   }
 
@@ -708,41 +709,47 @@ class ModularityChart extends TimeSeriesChart {
 }
 
 class NodeChart extends TimeSeriesChart {
-  constructor(data) {
-    super(data);
+  constructor(data, opts) {
+    super(data, opts);
+    this.filter = new Filter(opts.showLinkColor)
+    this.discreteInterval = opts.discreteInterval;
+    this.title = 'No. Nodes'
 
-    this.draw(calcNumNodes);
+    this.draw(this.calcNumNodes);
   }
 
-  calcNumNodes(data) {
-    const cDate = moment(elem.minDate);
+  calcNumNodes(data, _this) {
+    const cDate = moment(_this.minDate);
     const numNodesData = [];
 
-    while (cDate.isSameOrBefore(maxDate)) {
-      const linkSelection = elem.filter.filterLinks(elem.data.links, cDate, elm.linkTypeSelected); // function is only defined inside class Network.
-      const nodeSelection = elem.filter.filterNodes(elem.data.nodes, linkSelection);
+    while (cDate.isSameOrBefore(_this.maxDate)) {
+      const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
+      const nodeSelection = _this.filter.filterNodes(data.nodes, linkSelection);
       numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
-      cDate.add(1, sliderInterval); // TODO: sliderinterval only exists as discreteInterval within network class
+      cDate.add(1, _this.discreteInterval); 
     }
     return numNodesData;
   }
 }
 
 class LinkChart extends TimeSeriesChart {
-  constructor(data) {
-    super(data);
+  constructor(data, opts) {
+    super(data, opts);
+    this.filter = new Filter(opts.showLinkColor)
+    this.discreteInterval = opts.discreteInterval;
+    this.title = 'No. Links'
 
-    this.draw(calcNumLinks);
+    this.draw(this.calcNumLinks);
   }
 
-  calcNumLinks(data) {
-    const cDate = moment(minDate);
+  calcNumLinks(data, _this) {
+    const cDate = moment(_this.minDate);
     const numLinksData = [];
 
-    while (cDate.isSameOrBefore(maxDate)) {
-      const linkSelection = filterAndConsolidate(data.links, cDate, 'All');
-      numLinksData.push({'date': moment(cDate), 'num': linkSelection.length});
-      cDate.add(1, sliderInterval);
+    while (cDate.isSameOrBefore(_this.maxDate)) {
+      const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
+      numLinksData.push({'date': moment(cDate), 'num': linkSelection.length}); // TODO: return cumulative weight of all nodes instead of no. links
+      cDate.add(1, _this.discreteInterval);
     }
 
     return numLinksData;
@@ -831,11 +838,14 @@ d3.selection.prototype.moveToFront = function() {
         'maxDate': moment(Math.max.apply(Math, data.links.map((o) => o.timestamp))),
         'width': document.querySelector('#graph').clientWidth,
         'height': document.querySelector('#graph').clientHeight,
+        'discreteInterval': 'week',
       };
 
       const net = new Network(data, opts);
       new Slider(net);
       new ModularityChart(data, opts);
+      new NodeChart(data, opts)
+      new LinkChart(data, opts)
     });
   }
 
