@@ -665,6 +665,7 @@ class TimeSeriesChart {
     sChart.append('g')
         .attr('transform', 'translate(0,' + this.height + ')')
         .attr('class', 'axis')
+        .attr('class', 'xaxis')
         .call(
             d3.axisBottom(x)
                 .ticks(d3.timeMonth.every(6))
@@ -673,10 +674,13 @@ class TimeSeriesChart {
     sChart.append('g')
         .attr('transform', 'translate(0,0)')
         .attr('class', 'axis')
-        .call(d3.axisLeft(y).ticks(5));
+        .attr('class', 'yaxis')
+        .call(d3.axisLeft(y).tickValues([d3.min(chartData, (d) => d.num), d3.max(chartData, (d) => d.num)]));
 
     sChart.selectAll('.domain').remove();
-    sChart.selectAll('.tick').remove();
+    sChart.selectAll('.xaxis .tick').remove();
+    sChart.selectAll('.tick line').remove();
+    sChart.selectAll('.tick text').attr('x', -6);
 
     d3.select('.s-chart-area').append('rect')
         .attr('class', 's-chart-cursor')
