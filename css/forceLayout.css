@@ -25,7 +25,7 @@ text {
 
 .content-wrapper {
     margin-left: 10%;
-    max-width: 80%;
+    width:80vw;
 }
 
 .dropdown{
@@ -42,7 +42,6 @@ text {
     margin-top: 1em;
     margin-bottom: 1em;
     border-radius: 6px;
-    padding: 0px 5px 0px 5px;
 }
 
 #infobox {
@@ -124,9 +123,17 @@ p {
     display: inline;
 }
 
+.slider-wrapper{
+    width: 80vw;
+    margin: 0.5em 0;
+}
+
 .slider {
     position: relative;
     margin-bottom: 20px;
+    width: 75vw;
+    margin: 0 auto;
+    height: 30px;
 }
 
 .slider-text {
@@ -179,11 +186,21 @@ p {
 }
 
 .s-chart-wrapper{
+    width: 80vw;
+    height: 70px;
     margin-bottom: 40px;
     background: #32323a;
-    padding: 10px 5px 10px 5px;
     border-radius: 6px;
+    display: flex;
+    align-items: center;
 
+}
+
+.s-chart-area{
+    display: block; 
+    width:75vw;
+    height: 70%;
+    margin: 0 auto;
 }
 
 .s-chart-cursor{
@@ -197,5 +214,4 @@ p {
   font-size: 10px;
   pointer-events: none;
   background-color: black;
-  
 }

@@ -363,27 +363,27 @@ class Slider {
     this.minDate = this.network.minDate;
     this.maxDate = this.network.maxDate;
 
+    this.select = {};
+    this.select.slider = d3.select('.content-wrapper')
+        .append('div')
+        .attr('class', 'slider-wrapper')
+        .append('div')
+        .attr('class', 'slider');
+
     this.sliderTimeScale = d3.scaleTime()
-        .range([0, this.width])
+        .range([0, d3.select('.slider').node().getBoundingClientRect().width])
         .domain([this.minDate, this.maxDate]);
 
     this.sliderScale = d3.scaleLinear()
         .domain([this.minDate, this.maxDate])
-        .range([0, this.width])
+        .range([0, d3.select('.slider').node().getBoundingClientRect().width])
         .clamp(true);
-
-    this.select = {};
 
     this.setStyle();
     this.dispatchEvents();
   }
 
   setStyle() {
-    this.select.slider = d3.select('.slider')
-        .style('width', this.width + 'px')
-        .style('height', '30px');
-    //            .style("margin-left", margin.left + "px")
-
     this.select.sliderAxisContainer = this.select.slider.append('div')
         .attr('class', 'slider-text'); // irritating class name
 
@@ -428,7 +428,7 @@ class Slider {
           elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
 
           d3.selectAll('.s-chart-cursor')
-              .attr('x', elem.sliderScale(value) + 'px');
+              .attr('x', elem.sliderScale(value) + 'px'); // TODO: The object itself should be responsible for updating the position
         });
 
     this.dispatch
@@ -616,7 +616,7 @@ class Tooltip {
 class TimeSeriesChart {
   constructor(data, opts) {
     this.width = opts.width;
-    this.height = 100;
+    this.height = 80;
     this.titleHeight = 0;
     this.data = data;
     this.minDate = opts.minDate;
@@ -628,41 +628,27 @@ class TimeSeriesChart {
     const domainMax = d3.max(chartData, (d) => d.num);
     const domainMin = d3.min(chartData, (d) => Math.min(d.num, 0));
 
+    const sChartWrapper = d3.select('.content-wrapper').append('div')
+        .attr('class', 's-chart-wrapper')
+        .attr('height', this.height);
+
+    const sChart = sChartWrapper
+        .append('svg')
+        .attr('class', 's-chart-area')
+        .append('g')
+        .attr('transform', 'translate(0,' + this.titleHeight + ')');
+
     const x = d3.scaleTime()
-        .range([0, this.width])
+        .range([0, d3.select('.s-chart-area').node().getBoundingClientRect().width])
         .domain([this.minDate, this.maxDate]);
 
     const y = d3.scaleLinear()
-        .range([this.height, 0])
+        .range([d3.select('.s-chart-area').node().getBoundingClientRect().height, 0])
         .domain([domainMin, domainMax]);
 
     const valueline = d3.line()
         .x((d) => x(d.date))
         .y((d) => y(d.num));
-
-    const sChartWrapper = d3.select('.content-wrapper').append('svg')
-        .attr('class', 's-chart-wrapper')
-        .attr('width', this.width)
-        .attr('height', this.height + this.titleHeight);
-
-    sChartWrapper.append('svg')
-        .attr('class', 's-chart-title')
-        .attr('width', this.width)
-        .attr('height', this.titleHeight)
-        .append('text')
-        .attr('transform', 'rotate(-90)')
-        .attr('x', -(this.height + this.titleHeight))
-        .attr('y', -10)
-        .attr('text-anchor', 'right')
-        .text(this.title);
-
-    const sChart = sChartWrapper
-        .append('svg')
-        .attr('width', this.width)
-        .attr('height', this.height)
-        .attr('class', 's-chart')
-        .append('g')
-        .attr('transform', 'translate(0,' + this.titleHeight + ')');
 
     sChart.append('path')
         .attr('class', 'chartLine')
@@ -684,9 +670,9 @@ class TimeSeriesChart {
     sChart.selectAll('.domain').remove();
     sChart.selectAll('.tick').remove();
 
-    sChart.append('rect')
+    d3.select('.s-chart-area').append('rect')
         .attr('class', 's-chart-cursor')
-        .style('height', this.height);
+        .style('height', d3.select('.s-chart-area').node().getBoundingClientRect().height);
   }
 }
 
@@ -819,7 +805,6 @@ d3.selection.prototype.moveToFront = function() {
 
     const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
     const svg = wrapper.append('svg').attr('id', 'graph');
-    wrapper.append('div').attr('class', 'slider');
 
     d3.json(dataName, function(data) {
       data = parseDateStrings(data);
