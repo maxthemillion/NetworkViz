@@ -12,15 +12,54 @@ text {
     fill: grey;
 }
 
+.opener {
+    height: 72vh;
+    width: 100vw;
+    margin-top:28vh;
+}
+
+.caret {
+    border-left: solid 50px transparent; 
+    border-right: solid 50px transparent; 
+    border-top: solid 50px #fff;
+    filter: drop-shadow(0 0 10px #fff);
+    height: 0; 
+    width: 0; 
+    position: absolute;
+    left: 50%;
+    bottom: 10%;
+    margin-left: -50px;
+  }
+  
+
+.scroll-icon{
+    text-align: center;
+    font-size: 30px;
+    position: absolute;
+    bottom: 0;
+}
+
+.scroll-polygon{
+    filter: drop-shadow( 3px 3px 2px rgba(255, 255, 255, 0.7));
+}
+
 .title{
     margin-left: 10%;
-    margin-top: 2.5%;
     color: #f2f2f2;
 }
 
-.title #part1 {
+div #part1 {
     font-size: 1.5em;
-    margin-bottom: 1em
+    margin-bottom: 1em;
+    display: block;
+}
+
+div #part2 {
+    display: inline-block;
+}
+
+div #dropdown{
+    display: inline-block;
 }
 
 .content-wrapper {
@@ -87,22 +126,6 @@ p {
 .nodeCircle {
     stroke: #32323a;
     opacity: 0;
-}
-
-.node-active {
-    opacity: 1;
-}
-
-.node-passive {
-    opacity: 0.1;
-}
-
-.link-active {
-    opacity: 0.8;
-}
-
-.link-passive {
-    opacity: 0.05;
 }
 
 .infobox rect {
@@ -229,4 +252,54 @@ p {
   font-size: 10px;
   pointer-events: none;
   background-color: black;
+}
+
+.footer-wrapper{
+    text-align:center;
+    color: rgb(85, 84, 84);
+    font-size:10px;
+    width: 100vw;
+    height: 100px;
+}
+
+.social-media-icons{
+    border-top-style: ridge;
+    border-top-color: grey;
+    border-top-width: 1px;
+    padding-top:10px;
+    width:95%;
+    margin: 10px auto;
+}
+
+/* Style all font awesome icons */
+.fa {
+    padding: 10px;
+    font-size: 30px;
+    width: 30px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 6px;
+  }
+
+.fa:hover {
+    opacity: 0.7;
+} 
+
+.fa-linkedin {
+    background: #007bb5;
+    color: white;
+  }
+
+.fa-instagram {
+    background: #125688;
+    color: white;
+}
+
+.fa-github{
+    background: white;
+    color: black;
+}
+
+a {
+    color:rgb(168, 168, 168);
 }

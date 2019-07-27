@@ -52,19 +52,19 @@ class Network {
     this.setScales();
 
     const elem = this;
-    this.getLinkColor = function(d) {
+    this.getLinkColor = function (d) {
       return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'white';
     };
 
-    this.getGroupColor = function(d) {
-      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'grey';
+    this.getGroupColor = function (d) {
+      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'white';
     };
 
     this.setDates();
     this.initNodePositions();
 
     this.worker = new Worker('./js/worker.js');
-    this.worker.onmessage = function(event) {
+    this.worker.onmessage = function (event) {
       elem.current.nodes = event.data.nodes;
       elem.current.links = event.data.links;
       elem.draw();
@@ -94,7 +94,7 @@ class Network {
         .range([this.linkProperties.width_min, this.linkProperties.width_max]);
 
     this.linkColorScale = d3.scaleOrdinal(d3.schemeCategory10);
-    this.groupColorScale = d3.scaleOrdinal(d3.schemeCategory20);
+    this.groupColorScale = d3.scaleOrdinal(d3.schemeBlues[9]);
   }
 
   appendChartLayer() {
@@ -105,7 +105,7 @@ class Network {
 
   initNodePositions() {
     const elem = this;
-    this.nodes.forEach(function(d) {
+    this.nodes.forEach(function (d) {
       d.x = elem.chartWidth / 2 + (Math.random() * 100 - 50);
       d.y = elem.chartHeight / 2 + (Math.random() * 100 - 50);
     });
@@ -125,7 +125,7 @@ class Network {
     this.maxDate = moment(
         Math.max.apply(
             Math,
-            this.links.map(function(o) {
+        this.links.map(function (o) {
               return o.timestamp;
             })
         )
@@ -160,7 +160,7 @@ class Network {
     // node exit selection
     this.select.nodeCircles.exit()
         .transition()
-        .duration(function(d) {
+      .duration(function (d) {
           return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration;
         })
         .style('opacity', 0)
@@ -169,7 +169,7 @@ class Network {
     // link exit selection
     this.select.linkPolygons.exit()
         .transition()
-        .duration(function(d) {
+      .duration(function (d) {
           return elem.select.nodeCircles.exit().size() === 0 ? 0 : transitionDuration;
         })
         .style('opacity', 0)
@@ -183,17 +183,17 @@ class Network {
         .attr('y1', (d) => d.source.y)
         .attr('x2', (d) => d.target.x)
         .attr('y2', (d) => d.target.y)
-        .style('stroke-width', function(d) {
+      .style('stroke-width', function (d) {
           return elem.linkWeightScale(d.weight);
         })
         .style('opacity', 0)
         .merge(this.select.linkPolygons)
-        .style('stroke', function(d) {
+      .style('stroke', function (d) {
           return elem.getLinkColor(d.rel_type);
         })
         .transition()
         .duration(transitionDuration)
-        .style('stroke-width', function(d) {
+      .style('stroke-width', function (d) {
           return elem.linkWeightScale(d.weight);
         })
         .transition()
@@ -213,15 +213,15 @@ class Network {
         .attr('class', 'nodeCircle')
         .style('opacity', 0)
         .merge(this.select.nodeCircles)
-        .each(function() {
+      .each(function () {
           d3.select(this).moveToFront();
         })
         .transition()
         .duration(transitionDuration)
-        .attr('r', function(d) {
+      .attr('r', function (d) {
           return elem.nodeRadiusScale(d.weight);
         })
-        .style('fill', function(d) {
+      .style('fill', function (d) {
           return elem.getGroupColor(d.group);
         })
         .transition()
@@ -249,17 +249,17 @@ class Network {
       nodes: this.current.nodes,
       links: this.current.links,
       forceProperties: this.forceProperties,
-      chart: {width: this.chartWidth, height: this.chartHeight},
+      chart: { width: this.chartWidth, height: this.chartHeight },
     });
   }
 
   isConnected(a, b) {
-    return this.linkedByIndex[a.id + ',' + b.id] === 1 || this.linkedByIndex[b.id + ',' + a.id] === 1;
+    return this.linkedByIndex[a.id + ',' + b.id] === 1 || this.linkedByIndex[b.id + ',' + a.id] === 1 || a.id === b.id
   }
 
   calculateNodeWeight(node, link) {
-    node.forEach(function(d) {
-      d.weight = link.filter(function(l) {
+    node.forEach(function (d) {
+      d.weight = link.filter(function (l) {
         return l.source === d.id || l.target === d.id;
       }).length;
     });
@@ -268,7 +268,7 @@ class Network {
   updateLinkedByIndex(linksSelection) {
     this.linkedByIndex = {};
     const elem = this;
-    linksSelection.forEach(function(d) {
+    linksSelection.forEach(function (d) {
       if ((typeof d.source) === 'object') {
         elem.linkedByIndex[d.source.id + ',' + d.target.id] = 1;
       } else {
@@ -280,60 +280,67 @@ class Network {
   highlight() {
     const elem = this;
 
-    function activate(d, hoverNode) {
+    function emphasize(d, hoverNode) {
       if (!elem.highlightLocked) {
         elem.highlightActive = true;
 
-        elem.select.nodeCircles.classed('node-active', function(o) {
-          const isActive = elem.isConnected(d, o) ? true : false;
-          return isActive;
+        d3.selectAll('.nodeCircle').classed('passive', function (o) {
+          return  elem.isConnected(d, o) ? false : true;
         });
 
-        elem.select.nodeCircles.classed('node-passive', function(o) {
-          const isPassive = elem.isConnected(d, o) ? false : true;
-          return isPassive;
-        });
-
-        elem.select.linkPolygons.classed('link-active', function(o) {
-          return o.source === d || o.target === d ? true : false;
-        });
-        elem.select.linkPolygons.classed('link-passive', function(o) {
+        d3.selectAll('.linkPolygon').classed('passive', function (o) {
           return o.source === d || o.target === d ? false : true;
         });
 
-        d3.select(hoverNode).classed('node-active', true);
-        d3.select(hoverNode).classed('node-passive', false);
+        d3.selectAll('.passive')
+          .transition()
+          .duration(500)
+          .style('opacity', 0.05)
       }
     }
 
-    function passivate() {
-      if (!elem.highlightLocked) {
+    function equalize() {
         elem.highlightActive = false;
-        elem.select.nodeCircles.classed('node-active', false);
-        elem.select.nodeCircles.classed('node-passive', false);
-        elem.select.linkPolygons.classed('link-active', false);
-        elem.select.linkPolygons.classed('link-passive', false);
-      }
+
+        d3.selectAll('.nodeCircle.passive')
+          .transition()
+          .duration(500)
+          .style('opacity', 1)
+
+        d3.selectAll('.linkPolygon.passive')
+          .transition()
+          .duration(500)
+          .style('opacity', 0.3)
+
+        d3.selectAll('.nodeCircle').classed('passive', false);
+        d3.selectAll('.linkPolygon').classed('passive', false);
     }
 
     let tooltip;
     d3.selectAll('.nodeCircle')
-        .on('mouseover', function(d) {
-          activate(d, this);
+      .on('mouseover', function (d) {
+          emphasize(d, this);
           tooltip = new Tooltip(this, d);
         })
-        .on('mouseout', function(d) {
-          passivate();
+      .on('mouseout', function () {
+          equalize();
           tooltip.hide();
         })
 
-        .on('mouseup', function(d) {
-          if (!elem.highlightLocked) {
-            elem.highlightLocked = true;
-          } else {
-            elem.highlightLocked = false;
-            passivate();
-          }
+      .on('mouseup', function () {
+          d3.selectAll('.nodeCircle,.focus')
+            .attr('class', 'nodeCircle')
+            .transition()
+            .duration(500)
+            .style('fill', 'white')
+            .style('box-shadow', 'none');
+
+          d3.select(this)
+            .attr('class', 'nodeCircle focus')
+            .transition()
+            .duration(500)
+            .style('fill', 'green')
+            .style('box-shadow', '0 0 10px 5px rgba(255, 254, 254, 0.507');
         });
   }
 
@@ -341,7 +348,7 @@ class Network {
     if (groups !== undefined) {
       const nodeIDs = Object.keys(groups);
 
-      nodeIDs.forEach(function(d) {
+      nodeIDs.forEach(function (d) {
         const _d = +d;
         const nextNode = nodes.find((x) => x.id === _d);
         if (nextNode !== undefined) {
@@ -414,16 +421,16 @@ class Slider {
 
     const elem = this;
     this.select.slider.call(d3.drag()
-        .on('drag', function() {
+      .on('drag', function () {
           elem.dispatch.call('sliderChange');
         })
-        .on('end', function() {
+      .on('end', function () {
           elem.dispatch.call('sliderChange');
           elem.dispatch.call('sliderEnd');
         }));
 
     this.dispatch
-        .on('sliderChange', function() {
+      .on('sliderChange', function () {
           const value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
           elem.select.sliderHandle.style('left', elem.sliderScale(value) + 'px');
 
@@ -432,7 +439,7 @@ class Slider {
         });
 
     this.dispatch
-        .on('sliderEnd', function() {
+      .on('sliderEnd', function () {
           let value = elem.sliderScale.invert(d3.mouse(elem.select.sliderTray.node())[0]);
           value = Math.round(value);
 
@@ -454,7 +461,7 @@ class Filter {
   filterNodes(nodes, links) {
     const linkedNodes = {};
 
-    links.forEach(function(d) {
+    links.forEach(function (d) {
       if ((typeof d.source) === 'object') {
         linkedNodes[d.source.id] = 1;
         linkedNodes[d.target.id] = 1;
@@ -464,12 +471,12 @@ class Filter {
       }
     });
 
-    const filteredNodes = nodes.filter(function(d) {
+    const filteredNodes = nodes.filter(function (d) {
       return linkedNodes[d.id] === 1;
     });
 
     const nodeIds = Object.keys(linkedNodes);
-    nodeIds.forEach(function(d) {
+    nodeIds.forEach(function (d) {
       const res = nodes.find((x) => x.id === +d);
       if (res === undefined) {
         console.log('node missing ' + d);
@@ -507,7 +514,7 @@ class Filter {
     date = moment(date);
     const minDate = moment(date).subtract(this.linkInterval, 'days');
     links = links.filter(
-        function(d) {
+      function (d) {
           return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
         }
     );
@@ -516,7 +523,7 @@ class Filter {
   }
 
   _forType(linkType, links) {
-    links = links.filter(function(d) {
+    links = links.filter(function (d) {
       if (linkType === 'all') {
         return true;
       } else {
@@ -530,17 +537,17 @@ class Filter {
   _consolidate(links) {
     const elem = this;
     const linkMap = d3.nest()
-        .key(function(d) {
+      .key(function (d) {
           return elem.showLinkColor ? d.rel_type : 'grey';
         })
-        .key(function(d) {
+      .key(function (d) {
           return d.source;
         })
-        .key(function(d) {
+      .key(function (d) {
           return d.target;
         })
-        .rollup(function(values) {
-          return d3.sum(values, function(d) {
+      .rollup(function (values) {
+        return d3.sum(values, function (d) {
             return 1;
           });
         })
@@ -587,7 +594,7 @@ class Tooltip {
         .attr('x', parseFloat(element.getAttribute('cx')) - 20 + 'px')
         .attr('y', parseFloat(element.getAttribute('cy')) - 20 + 'px')
         .attr('dx', '0')
-        .attr('dy', function(d, i) {
+      .attr('dy', function (d, i) {
           return (1 * i - 1) + 'em';
         })
         .text((d) => d)
@@ -644,7 +651,7 @@ class TimeSeriesChart {
         .append('div')
         .attr('class', 's-chart-title')
         .data([this.title])
-        .text(d =>d);
+      .text(d => d);
 
     const x = d3.scaleTime()
         .range([0, d3.select('.s-chart-area').node().getBoundingClientRect().width])
@@ -701,7 +708,7 @@ class ModularityChart extends TimeSeriesChart {
     const keys = Object.keys(data.modularity).sort();
 
     for (let i = 0; i < keys.length; ++i) {
-      modularityData.push({'date': moment(keys[i]), 'num': +data.modularity[keys[i]]});
+      modularityData.push({ 'date': moment(keys[i]), 'num': +data.modularity[keys[i]] });
     }
 
     return modularityData;
@@ -725,7 +732,7 @@ class NodeChart extends TimeSeriesChart {
     while (cDate.isSameOrBefore(_this.maxDate)) {
       const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
       const nodeSelection = _this.filter.filterNodes(data.nodes, linkSelection);
-      numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
+      numNodesData.push({ 'date': moment(cDate), 'num': nodeSelection.length });
       cDate.add(1, _this.discreteInterval); 
     }
     return numNodesData;
@@ -748,7 +755,7 @@ class LinkChart extends TimeSeriesChart {
 
     while (cDate.isSameOrBefore(_this.maxDate)) {
       const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
-      numLinksData.push({'date': moment(cDate), 'num': linkSelection.length}); // TODO: return cumulative weight of all nodes instead of no. links
+      numLinksData.push({ 'date': moment(cDate), 'num': linkSelection.length }); // TODO: return cumulative weight of all nodes instead of no. links
       cDate.add(1, _this.discreteInterval);
     }
 
@@ -779,7 +786,7 @@ class GroupChart extends TimeSeriesChart {
         count = unique.length;
       }
 
-      numGroupsData.push({'date': moment(cDate), 'num': count});
+      numGroupsData.push({ 'date': moment(cDate), 'num': count });
       cDate.add(1, sliderInterval);
     }
     return numGroupsData;
@@ -788,51 +795,29 @@ class GroupChart extends TimeSeriesChart {
 
 // prototype function to move SVG elements to front
 // TODO: move this to where it fits. not in global scope.
-d3.selection.prototype.moveToFront = function() {
-  return this.each(function() {
+d3.selection.prototype.moveToFront = function () {
+  return this.each(function () {
     this.parentNode.appendChild(this);
   });
 };
 
 
 !(function main() {
-  const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
-  let selected;
 
-  const dropdownChange = function() {
-    selected = d3.select(this).property('value'),
-    d3.selectAll('.content-wrapper').remove();
-
-    generatePage(selected);
-  };
-
-  const dropdown = d3.select('#dropdown')
-      .append('select')
-      .attr('class', 'dropdown')
-      .on('change', dropdownChange);
-
-  dropdown.selectAll('option')
-      .data(projectNames)
-      .enter()
-      .append('option')
-      .attr('value', (d) => d)
-      .text((d) => d);
-
-
-  function generatePage(selected) {
+  function generateNet(selected) {
     const dataName = 'data/viz_' + selected + '.json';
 
-    const wrapper = d3.select('body').append('div').attr('class', 'content-wrapper');
+    const wrapper = d3.selectAll('.content-wrapper');
     const svg = wrapper.append('svg').attr('id', 'graph');
 
-    d3.json(dataName, function(data) {
+    d3.json(dataName, function (data) {
       data = parseDateStrings(data);
       data = castIntegers(data);
 
       const opts = {
         'svg': svg,
         'linkType': 'all',
-        'showGroupColor': true,
+        'showGroupColor': false,
         'showLinkColor': false,
         'minDate': moment(Object.keys(data.groups).sort()[0]),
         'maxDate': moment(Math.max.apply(Math, data.links.map((o) => o.timestamp))),
@@ -850,25 +835,97 @@ d3.selection.prototype.moveToFront = function() {
   }
 
   function parseDateStrings(data) {
-    data.links.forEach(function(d) {
+    data.links.forEach(function (d) {
       d.timestamp = moment(d.timestamp);
     });
     return data;
   }
 
   function castIntegers(data) {
-    data.nodes.forEach(function(d) {
+    data.nodes.forEach(function (d) {
       d.id = +d.id;
     });
-    data.links.forEach(function(d) {
+    data.links.forEach(function (d) {
       d.source = +d.source;
       d.target = +d.target;
     });
     return data;
   }
 
+  function generateOpener() {
+    const title = d3.select('.title')
+
+    const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
+    let selected;
+
+    const dropdownChange = function () {
+      selected = d3.select(this).property('value'),
+        d3.selectAll('.content-wrapper').selectAll('*').remove();
+      
+      d3.select('.title')
+        .append('div')
+        .attr('class', 'caret')
+        .style('opacity', 0)
+        .transition()
+        .duration(2000)
+        .style('opacity', '1')
+
+      generateNet(selected);
+    };
+
+    title
+      .selectAll('#part1')
+      .data(['Explore GitHub Communication Networks!'])
+      .enter()
+      .append('div')
+      .attr('id', 'part1')
+      .style('opacity', 0)
+      .text(d => d)
+      .transition()
+      .duration(1500)
+      .delay(500)
+      .style('opacity', 1)
+
+    title
+      .selectAll('#part2')
+      .data(['Choose a project:'])
+      .enter()
+      .append('div')
+      .attr('id', 'part2')
+      .style('opacity', 0)
+      .text(d => d)
+      .transition()
+      .duration(1500)
+      .delay(2000)
+      .style('opacity', 1)
+
+    title.append('div')
+      .attr('id', 'dropdown')
+
+    const dropdown = d3.select('#dropdown')
+      .append('select')
+      .attr('class', 'dropdown')
+      .on('change', dropdownChange)
+
+    dropdown
+      .style('opacity', 0)
+      .transition()
+      .duration(1500)
+      .delay(3500)
+      .style('opacity', 1)
+
+    dropdown.selectAll('option')
+      .data(projectNames)
+      .enter()
+      .append('option')
+      .attr('value', (d) => d)
+      .text((d) => d);
+
+  }
+
+  generateOpener()
   selected = d3.select('.dropdown').property('value');
-  generatePage(selected);
+  generateNet(selected);
 })();
 
 
