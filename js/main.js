@@ -810,7 +810,7 @@ d3.selection.prototype.moveToFront = function () {
     const wrapper = d3.selectAll('.content-wrapper');
     const svg = wrapper.append('svg').attr('id', 'graph');
 
-    d3.json(dataName, function (data) {
+    d3.json(dataName, function(data) {
       data = parseDateStrings(data);
       data = castIntegers(data);
 

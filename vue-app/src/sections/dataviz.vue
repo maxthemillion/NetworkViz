@@ -1,7 +1,7 @@
 <template>
     <div id='content-wrapper'>
         <div id='inner-content-wrapper'>
-            <div id='main-board'></div>
+            <div id='main-board'><h1>{{this.selected}}</h1></div>
             <div id='sub-board'>
                 <div id='chart-wrapper'></div>
                 <div id='legend'></div>
@@ -13,12 +13,19 @@
 <script>
 export default {
   name: "Dataviz",
-  props: {}
+  props: {
+    selected: String,
+    data: Object  
+  }
 };
 </script>
 
 
 <style lang="css" scoped>
+h1{
+  color:grey;
+}
+
 #content-wrapper {
   background-color: #e5e5e5;
   height: 100vh;
@@ -32,7 +39,6 @@ export default {
     left: 2%;
     height:98%;
     width:96%;
-
 }
 
 #main-board {
@@ -42,6 +48,7 @@ export default {
   position: relative;
   display: inline-block;
   min-width: 300px;
+  float: left;
 }
 
 #sub-board {
