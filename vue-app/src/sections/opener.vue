@@ -17,12 +17,18 @@
 
 <script>
 import * as d3 from "d3";
+
 const transitionDuration = 1000;
 const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
 
 export default {
   name: "Opener",
   props: {},
+  data: function() {
+        return  {
+            selected : ''
+        }
+      },
   methods: {
     showSubtitle: function() {
       d3
@@ -33,12 +39,15 @@ export default {
     },
     addOptions: function(){
         d3.select('#selector')
+            .on('change', this.dropdownChange);
+
+        d3.select('#selector')
             .selectAll('option')
             .data(projectNames)
             .enter()
             .append('option')
             .attr('value', (d) => d)
-            .text((d) => d);
+            .text((d) => d)
     },
     showOptions: function(){
         d3.select('#selector')
@@ -46,7 +55,17 @@ export default {
             .delay(transitionDuration)
             .duration(transitionDuration)
             .style('opacity', 1)
-    }
+    },
+    dropdownChange: function () {
+      this.selected = d3.select('#selector').property('value')  
+
+        d3.select('#caret')
+            .transition()
+            .duration(1000)
+            .style('opacity', '1')
+
+        this.$emit('user-select', this.selected)
+    },    
   },
   computed: {},
   mounted() {
@@ -103,8 +122,8 @@ h1 {
     font-size: 1em; 
     border-color: #6200EE;
     border-radius:6px;
-    display: inline;
-    height:2em;
+    display: inline-block;
+    height: 2em;
     padding:0 20px;
 }
 

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Opener/>
+    <Opener @user-select = 'printResponse'/>
     <Dataviz/>
   </div>
 </template>
@@ -18,7 +18,7 @@ export default {
   },
   data: function() {
     return {
-      loadData: []
+      loadData: []  
     };
   },
   mounted() {
@@ -29,6 +29,9 @@ export default {
     async fetchData() {
       //let data = await d3.json("./tweets.json");
       //this.loadData = data;
+    },
+    printResponse(d){
+      console.log(d)
     }
   }
 };
