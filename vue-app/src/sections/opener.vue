@@ -5,7 +5,7 @@
             <h1>Explore GitHub Communication Networks!</h1>
         </div> 
         <div id='sub-title'>Choose a project:</div>
-        <div>
+        <div id='selector-wrapper'>
             <select id='selector'>
             </select>
         </div>
@@ -58,6 +58,10 @@ export default {
 </script>
 
 <style scoped>
+h1 {
+    margin-top: 0px;
+}
+
 #opener {
     width: 100vw;
     height: 100vh;
@@ -77,6 +81,9 @@ export default {
 #sub-title{
     opacity:0;
     position: relative;
+    display: inline-block;
+    margin-right: 1em;
+    margin-bottom: 1em;
 }
 
 #main-title {
@@ -84,10 +91,21 @@ export default {
     position: relative;
   }
 
+#selector-wrapper{
+    display: inline-block;
+}
+
 #selector{
-    top: 1em;
     opacity:0;
     position: relative;
+    color: rgb(255, 255, 255);
+    background-color: rgb(104, 62, 255);
+    font-size: 1em; 
+    border-color: #6200EE;
+    border-radius:6px;
+    display: inline;
+    height:2em;
+    padding:0 20px;
 }
 
 #caret {

@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <!-- <HelloWorld msg="Welcome to Your Vue.js App" /> -->
     <Opener/>
     <Dataviz/>
   </div>
@@ -10,7 +9,6 @@
 import './styles/global.css'
 import Opener from "./sections/opener.vue";
 import Dataviz from "./sections/dataviz.vue";
-
 
 export default {
   name: "app",
