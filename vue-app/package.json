@@ -11,7 +11,8 @@
     "core-js": "^2.6.5",
     "d3": "^5.9.7",
     "moment": "^2.24.0",
-    "vue": "^2.6.10"
+    "vue": "^2.6.10",
+    "vue-worker": "^1.2.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.9.0",

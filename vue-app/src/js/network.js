@@ -1,12 +1,21 @@
-/* eslint-disable max-len */
+/* eslint-disable max-len, no-unused-vars */
+import * as d3 from 'd3';
+import * as moment from 'moment';
 
-/* global d3, moment */
+d3.selection.prototype.moveToFront = function() {
+  return this.each(function() {
+    this.parentNode.appendChild(this);
+  });
+};
 
-class Network {
-  constructor(data, opts) {
+export default class Network {
+  constructor(data, opts, worker) {
     this.links = data.links;
     this.groups = data.groups;
     this.nodes = data.nodes;
+
+    this.worker = worker;
+    this.worker.register({message: 'simulate', func: this.simulate});
 
     this.data = data;
     this.current = {};
@@ -31,7 +40,7 @@ class Network {
     };
 
     this.linkProperties = {
-      'width_min': 1,
+      'width_min': 2,
       'width_max': 50,
       'showColor': opts.showLinkColor,
     };
@@ -53,25 +62,57 @@ class Network {
 
     const elem = this;
     this.getLinkColor = function(d) {
-      return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'white';
+      return elem.linkProperties.showColor ? elem.linkColorScale(d) : 'grey';
     };
 
     this.getGroupColor = function(d) {
-      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'white';
+      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : 'grey';
     };
 
     this.setDates();
     this.initNodePositions();
 
-    this.worker = new Worker('./js/worker.js');
-    this.worker.onmessage = function(event) {
-      elem.current.nodes = event.data.nodes;
-      elem.current.links = event.data.links;
-      elem.draw();
-    };
-
     this.update(this.oldDate);
   }
+
+  simulate(event) {
+    const nodes = event.nodes;
+    const links = event.links;
+    const forceProperties = event.forceProperties;
+    const width = event.chart.width;
+    const height = event.chart.height;
+
+    // define simulation
+    const simulation = d3.forceSimulation()
+        .force('y',
+            d3.forceX(width / 2).strength(0.4))
+        .force('x',
+            d3.forceY(height / 2).strength(0.6))
+        .force('charge', d3.forceManyBody().strength(forceProperties.chargeStrength))
+        .force('link',
+            d3.forceLink().id(
+                function(d) {
+                  return d.id;
+                }))
+        .force(
+            'collide',
+            d3.forceCollide(function(d) {
+              return d.r + forceProperties.nodePadding;
+            })
+                .strength(forceProperties.collideStrength)
+                .iterations(forceProperties.collideIterations));
+    simulation.alphaMin(0.01);
+    simulation.stop();
+
+    simulation.nodes(nodes);
+    simulation.force('link').links(links);
+
+    for (let i = 0, n = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay())); i < n; ++i) {
+      simulation.tick();
+    }
+
+    return {nodes: nodes, links: links};
+  };
 
   setSize() {
     this.svg
@@ -81,7 +122,7 @@ class Network {
     this.chartLayer
         .attr('width', this.chartWidth)
         .attr('height', this.chartHeight)
-        .attr('transform', 'translate(' + [0, 0] + ')');
+        .attr('transform', ' translate(' + [-this.chartWidth/2, -this.chartHeight/2] + ') scale(2, 2)');
   }
 
   setScales() {
@@ -100,7 +141,8 @@ class Network {
   appendChartLayer() {
     this.chartLayer = this.svg
         .append('g')
-        .attr('class', 'chartLayer');
+        .attr('class', 'chartLayer')
+        .attr('transform', 'scale(2,2)');
   }
 
   initNodePositions() {
@@ -121,12 +163,13 @@ class Network {
      * maxDate: set to the last date occurence in the data
      *
      */
+    debugger;
     this.minDate = moment(Object.keys(this.groups).sort()[0]);
     this.maxDate = moment(
         Math.max.apply(
             Math,
             this.links.map(function(o) {
-              return o.timestamp;
+              return moment(o.timestamp);
             })
         )
     );
@@ -149,11 +192,11 @@ class Network {
     }
 
     // link update
-    this.select.linkPolygons = this.svg.selectAll('.linkPolygon')
+    this.select.linkPolygons = this.chartLayer.selectAll('.linkPolygon')
         .data(this.current.links, linkKey);
 
     // node update
-    this.select.nodeCircles = this.svg.selectAll('.nodeCircle')
+    this.select.nodeCircles = this.chartLayer.selectAll('.nodeCircle')
         .data(this.current.nodes, nodeKey);
 
     // step 1: remove exit selections
@@ -232,7 +275,6 @@ class Network {
         .duration(transitionDuration)
         .style('opacity', 1);
 
-
     this.highlight();
   }
 
@@ -245,12 +287,17 @@ class Network {
     this.current.groups = this.f.filterGroups(this.groups, newDate);
     this.current.nodes = this.reassignGroups(this.current.nodes, this.current.groups);
 
-    this.worker.postMessage({
+    const workerOpts = {
       nodes: this.current.nodes,
       links: this.current.links,
       forceProperties: this.forceProperties,
       chart: {width: this.chartWidth, height: this.chartHeight},
-    });
+    };
+
+    const event = this.simulate(workerOpts);
+    this.current.nodes = event.nodes;
+    this.current.links = event.links;
+    this.draw();
   }
 
   isConnected(a, b) {
@@ -515,10 +562,9 @@ class Filter {
     const minDate = moment(date).subtract(this.linkInterval, 'days');
     links = links.filter(
         function(d) {
-          return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
+          return moment(d.timestamp).isSameOrBefore(date) && moment(d.timestamp).isSameOrAfter(minDate);
         }
     );
-
     return links;
   }
 
@@ -579,351 +625,4 @@ class Filter {
     return resArray;
   }
 }
-
-class Tooltip {
-  constructor(element, d) {
-    const data = ['id: ' + d.name, 'group: ' + d.group];
-
-    this.select = d3.select('#graph')
-        .append('text')
-        .attr('class', 'tooltip')
-        .selectAll('tspan')
-        .data(data)
-        .enter()
-        .append('tspan')
-        .attr('x', parseFloat(element.getAttribute('cx')) - 20 + 'px')
-        .attr('y', parseFloat(element.getAttribute('cy')) - 20 + 'px')
-        .attr('dx', '0')
-        .attr('dy', function(d, i) {
-          return (1 * i - 1) + 'em';
-        })
-        .text((d) => d)
-        .style('opacity', 0);
-
-    this.show();
-  }
-
-  show() {
-    this.select
-        .transition('tooltip-show')
-        .duration(200)
-        .style('opacity', 0.9);
-  }
-
-  hide() {
-    this.select
-        .transition('tooltip-hide')
-        .duration(200)
-        .style('opacity', 0)
-        .remove();
-  }
-}
-
-
-class TimeSeriesChart {
-  constructor(data, opts) {
-    this.width = opts.width;
-    this.height = 80;
-    this.titleHeight = 0;
-    this.data = data;
-    this.minDate = opts.minDate;
-    this.maxDate = opts.maxDate;
-  }
-
-  draw(dataFunc) {
-    const chartData = dataFunc(this.data, this);
-    const domainMax = d3.max(chartData, (d) => d.num);
-    const domainMin = d3.min(chartData, (d) => Math.min(d.num, 0));
-
-    const sChartWrapper = d3.select('.content-wrapper').append('div')
-        .attr('class', 's-chart-wrapper')
-        .attr('height', this.height);
-
-    const sChart = sChartWrapper
-        .append('div')
-        .attr('class', 's-chart-wrapper-centering')
-        .append('svg')
-        .attr('class', 's-chart-area')
-        .append('g')
-        .attr('transform', 'translate(0,' + this.titleHeight + ')');
-
-    sChartWrapper
-        .append('div')
-        .attr('class', 's-chart-title')
-        .data([this.title])
-        .text((d) => d);
-
-    const x = d3.scaleTime()
-        .range([0, d3.select('.s-chart-area').node().getBoundingClientRect().width])
-        .domain([this.minDate, this.maxDate]);
-
-    const y = d3.scaleLinear()
-        .range([d3.select('.s-chart-area').node().getBoundingClientRect().height, 0])
-        .domain([domainMin, domainMax]);
-
-    const valueline = d3.line()
-        .x((d) => x(d.date))
-        .y((d) => y(d.num));
-
-    sChart.append('path')
-        .attr('class', 'chartLine')
-        .attr('d', valueline(chartData));
-
-    sChart.append('g')
-        .attr('transform', 'translate(0,' + this.height + ')')
-        .attr('class', 'axis')
-        .attr('class', 'xaxis')
-        .call(
-            d3.axisBottom(x)
-                .ticks(d3.timeMonth.every(6))
-                .tickFormat(d3.timeFormat('%d %B %y')));
-
-    sChart.append('g')
-        .attr('transform', 'translate(0,0)')
-        .attr('class', 'axis')
-        .attr('class', 'yaxis')
-        .call(d3.axisLeft(y).tickValues([d3.min(chartData, (d) => d.num), d3.max(chartData, (d) => d.num)]));
-
-    sChart.selectAll('.domain').remove();
-    sChart.selectAll('.xaxis .tick').remove();
-    sChart.selectAll('.tick line').remove();
-    sChart.selectAll('.tick text').attr('x', -6);
-
-    d3.selectAll('.s-chart-area').append('rect')
-        .attr('class', 's-chart-cursor')
-        .style('height', d3.select('.s-chart-area').node().getBoundingClientRect().height);
-  }
-}
-
-class ModularityChart extends TimeSeriesChart {
-  constructor(data, opts) {
-    super(data, opts);
-    this.title = 'Modularity';
-
-    this.draw(this.readModularity);
-  }
-
-  readModularity(data) {
-    const modularityData = [];
-    const keys = Object.keys(data.modularity).sort();
-
-    for (let i = 0; i < keys.length; ++i) {
-      modularityData.push({'date': moment(keys[i]), 'num': +data.modularity[keys[i]]});
-    }
-
-    return modularityData;
-  }
-}
-
-class NodeChart extends TimeSeriesChart {
-  constructor(data, opts) {
-    super(data, opts);
-    this.filter = new Filter(opts.showLinkColor);
-    this.discreteInterval = opts.discreteInterval;
-    this.title = 'No. Nodes';
-
-    this.draw(this.calcNumNodes);
-  }
-
-  calcNumNodes(data, _this) {
-    const cDate = moment(_this.minDate);
-    const numNodesData = [];
-
-    while (cDate.isSameOrBefore(_this.maxDate)) {
-      const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
-      const nodeSelection = _this.filter.filterNodes(data.nodes, linkSelection);
-      numNodesData.push({'date': moment(cDate), 'num': nodeSelection.length});
-      cDate.add(1, _this.discreteInterval);
-    }
-    return numNodesData;
-  }
-}
-
-class LinkChart extends TimeSeriesChart {
-  constructor(data, opts) {
-    super(data, opts);
-    this.filter = new Filter(opts.showLinkColor);
-    this.discreteInterval = opts.discreteInterval;
-    this.title = 'No. Links';
-
-    this.draw(this.calcNumLinks);
-  }
-
-  calcNumLinks(data, _this) {
-    const cDate = moment(_this.minDate);
-    const numLinksData = [];
-
-    while (cDate.isSameOrBefore(_this.maxDate)) {
-      const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);
-      numLinksData.push({'date': moment(cDate), 'num': linkSelection.length}); // TODO: return cumulative weight of all nodes instead of no. links
-      cDate.add(1, _this.discreteInterval);
-    }
-
-    return numLinksData;
-  }
-}
-
-class GroupChart extends TimeSeriesChart {
-  constructor(data) {
-    super(data);
-    this.draw(calcNumGroups);
-  }
-
-  calcNumGroups(data) {
-    function getUnique(value, index, self) {
-      return self.indexOf(value) === index;
-    }
-
-    const cDate = moment(minDate);
-    const numGroupsData = [];
-
-    while (cDate.isSameOrBefore(maxDate)) {
-      const groupSelection = filterGroups(this.groups, cDate);
-      let count = 0;
-      if (groupSelection !== undefined) {
-        const keys = Object.values(groupSelection);
-        const unique = keys.filter(getUnique);
-        count = unique.length;
-      }
-
-      numGroupsData.push({'date': moment(cDate), 'num': count});
-      cDate.add(1, sliderInterval);
-    }
-    return numGroupsData;
-  }
-}
-
-// prototype function to move SVG elements to front
-// TODO: move this to where it fits. not in global scope.
-d3.selection.prototype.moveToFront = function() {
-  return this.each(function() {
-    this.parentNode.appendChild(this);
-  });
-};
-
-
-!(function main() {
-  function generateNet(selected) {
-    const dataName = 'data/viz_' + selected + '.json';
-
-    const wrapper = d3.selectAll('.content-wrapper');
-    const svg = wrapper.append('svg').attr('id', 'graph');
-
-    d3.json(dataName, function(data) {
-      data = parseDateStrings(data);
-      data = castIntegers(data);
-
-      const opts = {
-        'svg': svg,
-        'linkType': 'all',
-        'showGroupColor': false,
-        'showLinkColor': false,
-        'minDate': moment(Object.keys(data.groups).sort()[0]),
-        'maxDate': moment(Math.max.apply(Math, data.links.map((o) => o.timestamp))),
-        'width': document.querySelector('#graph').clientWidth,
-        'height': document.querySelector('#graph').clientHeight,
-        'discreteInterval': 'week',
-      };
-
-      const net = new Network(data, opts);
-      new Slider(net);
-      new ModularityChart(data, opts);
-      new NodeChart(data, opts);
-      new LinkChart(data, opts);
-    });
-  }
-
-  function parseDateStrings(data) {
-    data.links.forEach(function(d) {
-      d.timestamp = moment(d.timestamp);
-    });
-    return data;
-  }
-
-  function castIntegers(data) {
-    data.nodes.forEach(function(d) {
-      d.id = +d.id;
-    });
-    data.links.forEach(function(d) {
-      d.source = +d.source;
-      d.target = +d.target;
-    });
-    return data;
-  }
-
-  function generateOpener() {
-    const title = d3.select('.title');
-
-    const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
-    let selected;
-
-    const dropdownChange = function() {
-      selected = d3.select(this).property('value'),
-      d3.selectAll('.content-wrapper').selectAll('*').remove();
-
-      d3.select('.title')
-          .append('div')
-          .attr('class', 'caret')
-          .style('opacity', 0)
-          .transition()
-          .duration(2000)
-          .style('opacity', '1');
-
-      generateNet(selected);
-    };
-
-    title
-        .selectAll('#part1')
-        .data(['Explore GitHub Communication Networks!'])
-        .enter()
-        .append('div')
-        .attr('id', 'part1')
-        .style('opacity', 0)
-        .text((d) => d)
-        .transition()
-        .duration(1500)
-        .delay(500)
-        .style('opacity', 1);
-
-    title
-        .selectAll('#part2')
-        .data(['Choose a project:'])
-        .enter()
-        .append('div')
-        .attr('id', 'part2')
-        .style('opacity', 0)
-        .text((d) => d)
-        .transition()
-        .duration(1500)
-        .delay(2000)
-        .style('opacity', 1);
-
-    title.append('div')
-        .attr('id', 'dropdown');
-
-    const dropdown = d3.select('#dropdown')
-        .append('select')
-        .attr('class', 'dropdown')
-        .on('change', dropdownChange);
-
-    dropdown
-        .style('opacity', 0)
-        .transition()
-        .duration(1500)
-        .delay(3500)
-        .style('opacity', 1);
-
-    dropdown.selectAll('option')
-        .data(projectNames)
-        .enter()
-        .append('option')
-        .attr('value', (d) => d)
-        .text((d) => d);
-  }
-
-  generateOpener();
-  selected = d3.select('.dropdown').property('value');
-  generateNet(selected);
-})();
-
 
