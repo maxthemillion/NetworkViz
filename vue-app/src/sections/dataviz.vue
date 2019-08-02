@@ -2,13 +2,13 @@
   <div id="content-wrapper">
     <div id="inner-content-wrapper">
       <div id="main-board">
-        <svg id="graph"/>
+        <svg id="graph"  class='remove-on-load'/>
+        <div id='slider-wrapper' class='remove-on-load'></div>
       </div>
       <div id="sub-board">
-        <div id="chart-wrapper"></div>
-        <div id="legend"></div>
+        <div id="chart-wrapper" class='remove-on-load'></div>
+        <div id="legend" class='remove-on-load'></div>
       </div>
-      <div id='slider-wrapper'></div>
     </div>
   </div>
 </template>
@@ -35,10 +35,9 @@ export default {
     generateNet: function() {
       console.log(this.selected !== "");
       if (this.selected !== "") {
-        const svg = d3.select("#graph");
-        svg.selectAll('*').remove();
+        d3.selectAll(".remove-on-load").selectAll('*').remove();
         const opts = {
-          svg: svg,
+          svg: d3.select('#graph'),
           linkType: "all",
           showGroupColor: false,
           showLinkColor: false,
@@ -126,7 +125,7 @@ h1 {
 }
 
 #slider-wrapper{
-    width: 80vw;
+    width: 100%;
     margin: 0.5em 0;
 }
 
@@ -136,7 +135,7 @@ h1 {
 .slider {
     position: relative;
     margin-bottom: 20px;
-    width: 75vw;
+    width: 100%;
     margin: 0 auto;
     height: 30px;
 }

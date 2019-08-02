@@ -7,7 +7,7 @@ export default class Slider {
     this.network = network;
 
     this.width = this.network.chartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
-    this.height = '20';
+    this.height = '50';
     this.minDate = this.network.minDate;
     this.maxDate = this.network.maxDate;
 
@@ -24,8 +24,6 @@ export default class Slider {
         .domain([this.minDate, this.maxDate])
         .range([0, d3.select('.slider').node().getBoundingClientRect().width])
         .clamp(true);
-
-    debugger;
 
     this.setStyle();
     this.dispatchEvents();
@@ -73,7 +71,6 @@ export default class Slider {
 
     this.dispatch
         .on('sliderChange', function() {
-          debugger;
           const value = _this.sliderScale.invert(_d3.mouse(_this.select.sliderTray.node())[0]);
           _this.select.sliderHandle.style('left', _this.sliderScale(value) + 'px');
 

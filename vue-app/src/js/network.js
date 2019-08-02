@@ -122,7 +122,7 @@ export default class Network {
     this.chartLayer
         .attr('width', this.chartWidth)
         .attr('height', this.chartHeight)
-        .attr('transform', ' translate(' + [-this.chartWidth/2, -this.chartHeight/2] + ') scale(2, 2)');
+        .attr('transform', ' translate(' + [0, 0] + ')');
   }
 
   setScales() {
@@ -163,7 +163,6 @@ export default class Network {
      * maxDate: set to the last date occurence in the data
      *
      */
-    debugger;
     this.minDate = moment(Object.keys(this.groups).sort()[0]);
     this.maxDate = moment(
         Math.max.apply(
