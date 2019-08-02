@@ -8,8 +8,11 @@ export default class Slider {
 
     this.width = this.network.chartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
     this.height = '50';
-    this.minDate = this.network.minDate;
-    this.maxDate = this.network.maxDate;
+    this.date = {
+        min: this.network.date.min, 
+        max: this.network.date.max
+    }
+    ;
 
     this.select = {};
     this.select.slider = elem
@@ -18,10 +21,10 @@ export default class Slider {
 
     this.sliderTimeScale = d3.scaleTime()
         .range([0, d3.select('.slider').node().getBoundingClientRect().width])
-        .domain([this.minDate, this.maxDate]);
+        .domain([this.date.min, this.date.max]);
 
     this.sliderScale = d3.scaleLinear()
-        .domain([this.minDate, this.maxDate])
+        .domain([this.date.min, this.date.max])
         .range([0, d3.select('.slider').node().getBoundingClientRect().width])
         .clamp(true);
 

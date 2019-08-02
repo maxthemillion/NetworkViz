@@ -17,7 +17,8 @@
 import * as d3 from "d3";
 import * as moment from "moment";
 import Network from "../js/network.js";
-import Slider from '../js/slider.js'
+import Slider from "../js/slider.js";
+import * as cs from "../js/charts.js";
 
 export default {
   name: "Dataviz",
@@ -28,30 +29,42 @@ export default {
   data: function() {
     return {};
   },
-  watch : {
-    data: function(){this.generateNet()}
+  watch: {
+    data: function() {
+      this.generateNet();
+    }
   },
   methods: {
     generateNet: function() {
       console.log(this.selected !== "");
       if (this.selected !== "") {
-        d3.selectAll(".remove-on-load").selectAll('*').remove();
+        d3
+          .selectAll(".remove-on-load")
+          .selectAll("*")
+          .remove();
         const opts = {
-          svg: d3.select('#graph'),
+          svg: d3.select("#graph"),
           linkType: "all",
           showGroupColor: false,
           showLinkColor: false,
           minDate: moment(Object.keys(this.data.groups).sort()[0]),
           maxDate: moment(
-            Math.max.apply(Math, this.data.links.map(o => o.timestamp))
+            Math.max.apply(
+              Math,
+              this.data.links.map(function(o) {
+                return moment(o.timestamp);
+              })
+            )
           ),
           width: document.querySelector("#graph").clientWidth,
           height: document.querySelector("#graph").clientHeight,
           discreteInterval: "week"
         };
-        const net = new Network(this.data, opts, this.$worker.create());
-        const slider = new Slider(net, d3.select('#slider-wrapper'))
-
+        const net = new Network(this.data, opts);
+        const slider = new Slider(net, d3.select("#slider-wrapper"));
+        new cs.ModularityChart(this.data, opts, d3.select("#chart-wrapper"));
+        //new cs.NodeChart(this.data, opts, d3.select("#chart-wrapper"));
+        //new cs.LinkChart(this.data, opts, d3.select("#chart-wrapper"));
       }
     }
   },
@@ -106,12 +119,6 @@ h1 {
   display: inline-block;
 }
 
-#sub-chart-wrapper {
-  position: relative;
-  width: 100%;
-  height: 66%;
-}
-
 #legend {
   background-color: #ffffff;
   position: relative;
@@ -120,68 +127,115 @@ h1 {
 }
 
 .linkPolygon {
-    opacity: 0.3;
-    stroke-width: 1px;
+  opacity: 0.3;
+  stroke-width: 1px;
 }
 
-#slider-wrapper{
-    width: 100%;
-    margin: 0.5em 0;
+#slider-wrapper {
+  width: 100%;
+  margin: 0.5em 0;
 }
-
 </style>
 
 <style lang='css'>
 .slider {
-    position: relative;
-    margin-bottom: 20px;
-    width: 100%;
-    margin: 0 auto;
-    height: 30px;
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+  margin: 0 auto;
+  height: 30px;
 }
 
 .slider-text {
-    position: absolute;
+  position: absolute;
 }
 
 .slider-tray {
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    border: solid 1px rgb(160, 160, 160);
-    border-top-color: #aaa;
-    border-radius: 4px;
-    background-color: #8c8d9c;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);    
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  border: solid 1px rgb(160, 160, 160);
+  border-top-color: #aaa;
+  border-radius: 4px;
+  background-color: #8c8d9c;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .slider-handle {
-    position: absolute;
+  position: absolute;
 }
 
 .slider-handle-icon {
-    width: 14px;
-    height: 14px;
-    border: solid 1px #aaa;
-    position: absolute;
-    border-radius: 10px;
-    background-color: #fff;
-    box-shadow: 0 0 10px 5px rgba(255, 254, 254, 0.507);
-    top: -7px;
-    left: -7px;
+  width: 14px;
+  height: 14px;
+  border: solid 1px #aaa;
+  position: absolute;
+  border-radius: 10px;
+  background-color: #6200ee;
+  box-shadow: 0 0 10px 5px rgba(98, 0, 238, 0.507);
+  top: -7px;
+  left: -7px;
 }
 
 .axis {
+  color: grey;
+  font-size: 0.8em;
+}
+
+.axis line {
+  stroke: grey;
+}
+
+.axis path {
+  stroke: grey;
+}
+
+.chartLine {
+    stroke: grey;
+    stroke-width: 1px;
+    opacity: 0.5;
+    fill: transparent;
+}
+
+#chart-wrapper{
+  margin-top: 10px;
+}
+
+.s-chart-wrapper{
+    height: 100px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: flex-end;
+    position:relative;
+}
+
+.s-chart-wrapper-centering{
+    display: flex;
+    width: 90%;
+    height: 100%;
+    align-items: center;
+    margin: 0 auto;
+}
+
+.s-chart-area{
+    display: block; 
+    width:100%;
+    height: 70%;
+    margin: 0 auto;
+}
+
+.s-chart-cursor{
+    width: 1px;
+    fill: deepskyblue;
+    position: absolute;
+    opacity: 1;
+}
+
+.s-chart-title{
+    left:5%;
     color: grey;
-    font-size: 0.8em;
+    position:relative;
 }
 
-.axis line{
-    stroke: grey;
-}
-
-.axis path{
-    stroke: grey;
-}
 
 </style>

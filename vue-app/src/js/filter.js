@@ -1,7 +1,7 @@
-/* eslint-disable max-len */
-/* global d3, moment */
+import * as d3 from 'd3';
+import * as moment from 'moment';
 
-class Filter {
+export default class Filter {
   constructor(showLinkColor) {
     this.linkInterval = 30;
     this.showLinkColor = showLinkColor; // TODO: missplaced attribute. move to better fit.
@@ -64,10 +64,9 @@ class Filter {
     const minDate = moment(date).subtract(this.linkInterval, 'days');
     links = links.filter(
         function(d) {
-          return d.timestamp.isSameOrBefore(date) && d.timestamp.isSameOrAfter(minDate);
+          return moment(d.timestamp).isSameOrBefore(date) && moment(d.timestamp).isSameOrAfter(minDate);
         }
     );
-
     return links;
   }
 
