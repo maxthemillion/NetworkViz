@@ -11,6 +11,7 @@ d3.selection.prototype.moveToFront = function() {
 
 export default class Network {
   constructor(data, opts) {
+    this.initialized = true;
     this.links = data.links;
     this.groups = data.groups;
     this.nodes = data.nodes;
