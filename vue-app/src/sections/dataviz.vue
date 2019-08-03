@@ -4,11 +4,13 @@
       <div id="main-board">
         <svg id="graph"  class='remove-on-load'/>
         <div id='slider-wrapper' class='remove-on-load'>
-          <Slider v-if='net.initialized' v-bind:network='net'/>
+          <Slider v-if='net.initialized' :network='net' v-on:dateSelect='setDate'/>
         </div>
       </div>
       <div id="sub-board">
-        <div id="chart-wrapper" class='remove-on-load'></div>
+        <div id="chart-wrapper" class='remove-on-load'>
+           <ModularityChart v-if='net.initialized' :data='data' :opts='opts' :currentDate='currentDate' />
+        </div>
         <div id="legend" class='remove-on-load'></div>
       </div>
     </div>
@@ -20,12 +22,14 @@ import * as d3 from "d3";
 import * as moment from "moment";
 import Network from "../js/network.js";
 import Slider from '../components/ui/slider.vue'
+import ModularityChart from '../components/charts/InfoCharts.vue'
 import * as cs from "../js/charts.js";
 
 export default {
   name: "Dataviz",
   components: {
     Slider,
+    ModularityChart
   },
   props: {
     selected: String,
@@ -33,7 +37,9 @@ export default {
   },
   data: function() {
     return {
-      net: Object
+      net: Object,
+      opts: {},
+      currentDate: {},
     };
   },
   watch: {
@@ -49,7 +55,7 @@ export default {
           .selectAll(".remove-on-load")
           .selectAll("*")
           .remove();
-        const opts = {
+        this.opts = {
           svg: d3.select("#graph"),
           linkType: "all",
           showGroupColor: false,
@@ -67,11 +73,11 @@ export default {
           height: document.querySelector("#graph").clientHeight,
           discreteInterval: "week"
         };
-        this.net = new Network(this.data, opts);
-        new cs.ModularityChart(this.data, opts, d3.select("#chart-wrapper"));
-        //new cs.NodeChart(this.data, opts, d3.select("#chart-wrapper"));
-        //new cs.LinkChart(this.data, opts, d3.select("#chart-wrapper"));
+        this.net = new Network(this.data, this.opts);
       }
+    },
+    setDate: function(d) {
+      this.currentDate = d
     }
   },
   mounted() {
@@ -88,7 +94,7 @@ h1 {
 
 #content-wrapper {
   background-color: #e5e5e5;
-  height: 100vh;
+  height: 75vh;
   min-width: 100vw;
   position: relative;
 }
@@ -159,52 +165,8 @@ h1 {
   stroke: grey;
 }
 
-.chartLine {
-    stroke: grey;
-    stroke-width: 1px;
-    opacity: 0.5;
-    fill: transparent;
-}
-
 #chart-wrapper{
   margin-top: 10px;
 }
-
-.s-chart-wrapper{
-    height: 100px;
-    margin-bottom: 40px;
-    display: flex;
-    align-items: flex-end;
-    position:relative;
-}
-
-.s-chart-wrapper-centering{
-    display: flex;
-    width: 90%;
-    height: 100%;
-    align-items: center;
-    margin: 0 auto;
-}
-
-.s-chart-area{
-    display: block; 
-    width:100%;
-    height: 70%;
-    margin: 0 auto;
-}
-
-.s-chart-cursor{
-    width: 1px;
-    fill: deepskyblue;
-    position: absolute;
-    opacity: 1;
-}
-
-.s-chart-title{
-    left:5%;
-    color: grey;
-    position:relative;
-}
-
 
 </style>

@@ -1,6 +1,5 @@
 /* eslint-disable max-len, no-unused-vars */
 import * as d3 from 'd3';
-import * as moment from 'moment';
 import Filter from './filter.js'
 
 d3.selection.prototype.moveToFront = function() {

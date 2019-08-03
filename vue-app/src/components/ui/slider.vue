@@ -37,9 +37,9 @@ export default {
             this.select = {};
             this.select.slider = d3.select('.slider')
 
-            this.sliderTimeScale = d3.scaleTime()
+            this.sliderTimeScale = d3.scaleTime() // TODO: do I really need 2 scales here?
+                .domain([this.date.min, this.date.max])
                 .range([0, this.select.slider.node().getBoundingClientRect().width])
-                .domain([this.date.min, this.date.max]);
 
             this.sliderScale = d3.scaleLinear()
                 .domain([this.date.min, this.date.max])
@@ -81,11 +81,9 @@ export default {
 
             this.dispatch
                 .on('sliderChange', function() {
-                const value = _this.sliderScale.invert(_d3.mouse(_this.select.sliderTray.node())[0]);
-                _this.select.sliderHandle.style('left', _this.sliderScale(value) + 'px');
-
-                d3.selectAll('.s-chart-cursor')
-                    .attr('x', _this.sliderScale(value) + 'px'); // TODO: The object itself should be responsible for updating the position
+                const date = _this.sliderScale.invert(_d3.mouse(_this.select.sliderTray.node())[0]);
+                _this.$emit('dateSelect', moment(date))
+                _this.updateHandlePosition(date)
                 });
 
             this.dispatch
@@ -95,11 +93,16 @@ export default {
 
                 const newDate = moment(value).startOf(_this.network.discreteInterval);
                 if (!newDate.isSame(_this.oldDate)) {
+                    _this.updateHandlePosition(newDate)
+                    _this.$emit('dateSelect', moment(newDate))
                     _this.oldDate = moment(newDate);
                     _this.network.update(newDate);
                 }
                 });
-        }   
+        },
+        updateHandlePosition: function(date){
+            this.select.sliderHandle.style('left', this.sliderScale(date) + 'px');
+        }
     },
     mounted(){
         this.generate();

@@ -10,7 +10,6 @@
             </select>
         </div>
         </div>
-        <div id='caret'></div>
     </div>
 </template>
 
@@ -78,11 +77,12 @@ export default {
 <style scoped>
 h1 {
     margin-top: 0px;
+    margin-bottom:0.2em;
 }
 
 #opener {
     width: 100vw;
-    height: 100vh;
+    height: 25vh;
     background-color: #6200EE;
     position: relative;
     top:0;
@@ -91,9 +91,9 @@ h1 {
 
 #title-wrapper{
     position:relative;
-    left: 20vw;
-    top: 33vh;
-    width:66%;
+    left: 7.5%;
+    top: 15%;
+    width:80%;
 }
 
 #sub-title{
@@ -125,19 +125,6 @@ h1 {
     height: 2em;
     padding:0 20px;
 }
-
-#caret {
-    border-left: solid 50px transparent; 
-    border-right: solid 50px transparent; 
-    border-top: solid 50px #fff;
-    filter: drop-shadow(0 0 10px #fff);
-    height: 0; 
-    width: 0; 
-    position: absolute;
-    left: 50%;
-    bottom: 10%;
-    margin-left: -50px;
-  }
 
 </style>
 
