@@ -36,14 +36,14 @@ export default {
             this.width = this.opts.width;
             this.height = 80;
             this.titleHeight = 0;
-            this.minDate = this.opts.minDate;
-            this.maxDate = this.opts.maxDate;
+            this.minDate = moment(this.opts.minDate);
+            this.maxDate = moment(this.opts.maxDate);
 
             this.select = {}
 
             this.chartData = dataFunc(this.data, this);
-            const domainMax = d3.max(this.chartData, (d) => d.num);
-            const domainMin = d3.min(this.chartData, (d) => Math.min(d.num, 0));
+            const domainMax = d3.max(this.chartData, (d) => d.value);
+            const domainMin = d3.min(this.chartData, (d) => Math.min(d.value, 0));
 
             d3.select('#s-chart-wrapper')
                 .attr('height', this.height);
@@ -64,8 +64,8 @@ export default {
         drawLine: function(){
             const _this = this
             const valueline = d3.line()
-                .x((d) => _this.x(d.date))
-                .y((d) => _this.y(d.num));
+                .x((d) => _this.x(moment(d.key, ('YYYY-WW')))) // TODO: check the return value of this statement
+                .y((d) => _this.y(d.value));
 
             this.select.chart.append('path')
                 .attr('id', 'chartLine')
@@ -86,7 +86,7 @@ export default {
                 .attr('transform', 'translate(0,0)')
                 .attr('class', 'axis')
                 .attr('class', 'yaxis')
-                .call(d3.axisLeft(this.y).tickValues([d3.min(this.chartData, (d) => d.num), d3.max(this.chartData, (d) => d.num)]));
+                .call(d3.axisLeft(this.y).tickValues([d3.min(this.chartData, (d) => d.value), d3.max(this.chartData, (d) => d.value)]));
 
             this.select.chart.selectAll('.domain').remove();
             this.select.chart.selectAll('.xaxis .tick').remove();
@@ -101,21 +101,36 @@ export default {
         readModularity: function(){
             const modularityData = [];
             const keys = Object.keys(this.data.modularity).sort();
-
+            
             for (let i = 0; i < keys.length; ++i) {
-                modularityData.push({ 'date': moment(keys[i]), 'num': +this.data.modularity[keys[i]] });
+                modularityData.push({ 'key': moment(keys[i]).format('YYYY-WW'), 'value': +this.data.modularity[keys[i]] });
             }
 
             return modularityData;
         },
-        
+        calcNumLinks: function(){
+            const cDate = moment(this.minDate);
+            let linkCount = d3.nest()
+                .key(function(d){return moment(d.timestamp).format('YYYY-WW')})
+                .rollup( 
+                    function (values){
+                        return d3.sum(
+                            values, 
+                            function(){return 1}
+                        )
+                    }
+                )
+                .entries(this.data.links)
+                .sort(function(a, b){return d3.ascending(a.key, b.key)})    
+            return linkCount;
+        },
         updateCursorPosition: function(currentDate){
             d3.selectAll('#s-chart-cursor')
                     .attr('x', this.x(currentDate) + 'px'); 
         },
     },
     mounted() {
-        this.setUp(this.readModularity)
+        this.setUp(this.calcNumLinks)
         this.drawLine()
         this.drawAxis()    
     }
@@ -158,9 +173,9 @@ export default {
 }
 
 #chartLine {
-    stroke: grey;
+    stroke: #3d4c77;
     stroke-width: 1px;
-    opacity: 0.5;
+    opacity: 0.7;
     fill: transparent;
 }
 

@@ -1,6 +1,12 @@
 <template>
     <div class='slider'>
-        <div class='slider-text'></div>
+        <div class='slider-text'>
+            <svg id='axis_container'>
+                <g id='main_axis'>
+                    
+                </g>
+            </svg>
+        </div>
         <div class='slider-tray'></div>
         <div class='slider-handle'>
             <div class='slider-handle-icon'></div>
@@ -47,20 +53,15 @@ export default {
                 .clamp(true);
         },
         setStyle : function() {
-            this.select.sliderAxisContainer = d3.select('.slider-text'); // irritating class name
 
-            this.select.sliderAxisContainer
-                .append('svg')
-                .attr('width', this.width)
-                .attr('height', this.height)
-                .append('g')
-                .attr('class', 'axis')
-                .attr('id', 'main')
+            d3.select('#main_axis')
                 .attr('transform', 'translate(0, 3)')
                 .call(
                     d3.axisBottom(this.sliderTimeScale)
-                        .ticks(d3.timeMonth.every(6))
+                        .ticks(d3.timeMonth.every(3))
                         .tickFormat(d3.timeFormat('%b %y')));
+
+            d3.selectAll('#main_axis .domain').remove()
 
             this.select.sliderTray = d3.select('.slider-tray');
 
@@ -112,27 +113,38 @@ export default {
 
 <style>
 
+#axis_container{
+    width: 100%
+}
+
+#main_axis{
+    color: #3d4c77;
+}
+
 .slider {
   position: relative;
   margin-bottom: 20px;
-  width: 100%;
+  width: 90%;
   margin: 0 auto;
   height: 30px;
+  opacity:0.8;
+}
+
+.slider:hover{
+    opacity:1;
 }
 
 .slider-text {
   position: absolute;
+  width: 100%
 }
 
 .slider-tray {
   position: absolute;
   width: 100%;
   height: 2px;
-  border: solid 1px rgb(160, 160, 160);
-  border-top-color: #aaa;
-  border-radius: 4px;
-  background-color: #8c8d9c;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+  border-radius: 5px;
+  background-color: #a3a4af;
 }
 
 .slider-handle {
@@ -140,14 +152,13 @@ export default {
 }
 
 .slider-handle-icon {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   border: solid 1px #aaa;
   position: absolute;
   border-radius: 10px;
-  background-color: #6200ee;
-  box-shadow: 0 0 10px 5px rgba(98, 0, 238, 0.507);
-  top: -7px;
+  background-color: #3d4c77;
+  top: -9px;
   left: -7px;
 }
 </style>

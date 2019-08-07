@@ -5,6 +5,7 @@ export default class Filter {
   constructor(showLinkColor) {
     this.linkInterval = 30;
     this.showLinkColor = showLinkColor; // TODO: missplaced attribute. move to better fit.
+    this._d3 = d3
   }
 
   filterNodes(nodes, links) {
@@ -60,13 +61,9 @@ export default class Filter {
   }
 
   _forDate(date, links) {
-    date = moment(date);
-    const minDate = moment(date).subtract(this.linkInterval, 'days');
-    links = links.filter(
-        function(d) {
-          return moment(d.timestamp).isSameOrBefore(date) && moment(d.timestamp).isSameOrAfter(minDate);
-        }
-    );
+    date = moment(date)
+    links = d3.nest().key(function(d){return moment(d.timestamp).format('YYYY-WW')}).map(links)
+    links = links["$"+date.format('YYYY-WW')]
     return links;
   }
 

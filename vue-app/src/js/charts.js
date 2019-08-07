@@ -139,6 +139,18 @@ export class LinkChart extends TimeSeriesChart {
     calcNumLinks(data, _this) {
         const cDate = moment(_this.minDate);
         const numLinksData = [];
+        debugger
+        let newData = d3.nest()
+            .key(function(d){return moment(d.timestamp).format('YYYY-WW')})
+            .rollup( 
+                function (values){
+                    return d3.sum(
+                        values, 
+                        function(d){return d.weight}
+                    )
+                }
+            )
+            .entries(data.links)
 
         while (cDate.isSameOrBefore(_this.maxDate)) {
             const linkSelection = _this.filter.filterLinks(cDate, 'all', data.links);

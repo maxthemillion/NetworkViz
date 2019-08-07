@@ -17,7 +17,9 @@
 <script>
 import * as d3 from "d3";
 const transitionDuration = 1000;
-const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
+//const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
+const projectNames = ['OneDrive', 'gatsbyjs'];
+
 
 export default {
   name: "Opener",
@@ -82,8 +84,8 @@ h1 {
 
 #opener {
     width: 100vw;
-    height: 25vh;
-    background-color: #6200EE;
+    height: 15vh;
+    background-color: #3d4c77;
     position: relative;
     top:0;
     left:0;
@@ -117,10 +119,10 @@ h1 {
     opacity:0;
     position: relative;
     color: rgb(255, 255, 255);
-    background-color: rgb(104, 62, 255);
+    background-color: #5b6992;
     font-size: 1em; 
-    border-color: #6200EE;
-    border-radius:6px;
+    border-color: #3d4c77;
+    border-radius:0px;
     display: inline-block;
     height: 2em;
     padding:0 20px;

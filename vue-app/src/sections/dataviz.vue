@@ -3,9 +3,6 @@
     <div id="inner-content-wrapper">
       <div id="main-board">
         <svg id="graph"  class='remove-on-load'/>
-        <div id='slider-wrapper' class='remove-on-load'>
-          <Slider v-if='net.initialized' :network='net' v-on:dateSelect='setDate'/>
-        </div>
       </div>
       <div id="sub-board">
         <div id="chart-wrapper" class='remove-on-load'>
@@ -13,6 +10,9 @@
         </div>
         <div id="legend" class='remove-on-load'></div>
       </div>
+      <div id='slider-wrapper'>
+          <Slider v-if='net.initialized' :network='net' v-on:dateSelect='setDate'/>
+        </div>
     </div>
   </div>
 </template>
@@ -23,6 +23,7 @@ import * as moment from "moment";
 import Network from "../js/network.js";
 import Slider from '../components/ui/slider.vue'
 import ModularityChart from '../components/charts/InfoCharts.vue'
+import LinksChart from '../components/charts/InfoCharts.vue'
 import * as cs from "../js/charts.js";
 
 export default {
@@ -94,7 +95,7 @@ h1 {
 
 #content-wrapper {
   background-color: #e5e5e5;
-  height: 75vh;
+  height: 85vh;
   min-width: 100vw;
   position: relative;
 }
@@ -125,7 +126,7 @@ h1 {
 #sub-board {
   background-color: #ffffff;
   height: 90%;
-  width: 32%;
+  width: 34%;
   position: relative;
   left: 2px;
   display: inline-block;
@@ -145,12 +146,16 @@ h1 {
 
 #slider-wrapper {
   width: 100%;
-  margin: 0.5em 0;
+  margin: 1.5em 0;
 }
 </style>
 
 <style lang='css'>
 
+.nodeCircle{
+  stroke: white;
+  stroke-width: 1px;
+}
 
 .axis {
   color: grey;
