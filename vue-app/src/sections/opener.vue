@@ -78,6 +78,7 @@ export default {
 
 <style scoped>
 h1 {
+    font-weight: lighter;
     margin-top: 0px;
     margin-bottom:0.2em;
 }
@@ -85,7 +86,6 @@ h1 {
 #opener {
     width: 100vw;
     height: 15vh;
-    background-color: #3d4c77;
     position: relative;
     top:0;
     left:0;
@@ -107,7 +107,6 @@ h1 {
 }
 
 #main-title {
-    text-shadow: 1px 1px #5a5a5a;
     position: relative;
   }
 
@@ -118,10 +117,10 @@ h1 {
 #selector{
     opacity:0;
     position: relative;
-    color: rgb(255, 255, 255);
-    background-color: #5b6992;
+    color: deepskyblue;
+    background-color: #12111d;
     font-size: 1em; 
-    border-color: #3d4c77;
+    border-color: #12111d;
     border-radius:0px;
     display: inline-block;
     height: 2em;

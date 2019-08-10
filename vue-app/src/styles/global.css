@@ -9,8 +9,5 @@ body, html {
     -moz-osx-font-smoothing: grayscale;
     text-align: left;
     color: #ffffff;
+    background-color:#12111d;
   }
-
-h1 {
-    opacity: 0.74;
-}

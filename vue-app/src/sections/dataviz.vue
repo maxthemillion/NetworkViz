@@ -89,12 +89,8 @@ export default {
 
 
 <style lang="css" scoped>
-h1 {
-  color: grey;
-}
 
 #content-wrapper {
-  background-color: #e5e5e5;
   height: 85vh;
   min-width: 100vw;
   position: relative;
@@ -109,7 +105,6 @@ h1 {
 }
 
 #main-board {
-  background-color: #ffffff;
   width: 66%;
   height: 90%;
   position: relative;
@@ -124,7 +119,6 @@ h1 {
 }
 
 #sub-board {
-  background-color: #ffffff;
   height: 90%;
   width: 34%;
   position: relative;
@@ -133,7 +127,6 @@ h1 {
 }
 
 #legend {
-  background-color: #ffffff;
   position: relative;
   width: 25%;
   height: 33%;

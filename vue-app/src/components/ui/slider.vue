@@ -118,7 +118,7 @@ export default {
 }
 
 #main_axis{
-    color: #3d4c77;
+    color: white;
 }
 
 .slider {
@@ -144,7 +144,7 @@ export default {
   width: 100%;
   height: 2px;
   border-radius: 5px;
-  background-color: #a3a4af;
+  background-color: white;
 }
 
 .slider-handle {
@@ -152,13 +152,13 @@ export default {
 }
 
 .slider-handle-icon {
-  width: 18px;
-  height: 18px;
-  border: solid 1px #aaa;
+  width: 14px;
+  height: 14px;
+  border: solid 1px white;
   position: absolute;
   border-radius: 10px;
-  background-color: #3d4c77;
-  top: -9px;
+  background-color: deepskyblue;
+  top: -7px;
   left: -7px;
 }
 </style>

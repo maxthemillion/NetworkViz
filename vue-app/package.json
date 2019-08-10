@@ -12,6 +12,7 @@
     "d3": "^5.9.7",
     "eslint-config-google": "^0.13.0",
     "moment": "^2.24.0",
+    "typeface-aileron": "0.0.66",
     "vue": "^2.6.10",
     "vue-worker": "^1.2.1"
   },

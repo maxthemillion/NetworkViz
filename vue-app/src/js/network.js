@@ -37,14 +37,14 @@ export default class Network {
     this.discreteInterval = "week";
 
     this.nodeProperties = {
-      r_min: 4,
-      r_max: 100,
+      r_min: 2,
+      r_max: 50,
       showColor: opts.showGroupColor
     };
 
     this.linkProperties = {
-      width_min: 2,
-      width_max: 50,
+      width_min: 1,
+      width_max: 30,
       showColor: opts.showLinkColor
     };
 
@@ -66,11 +66,11 @@ export default class Network {
 
     const elem = this;
     this.getLinkColor = function(d) {
-      return elem.linkProperties.showColor ? elem.linkColorScale(d) : "#3d4c77";
+      return elem.linkProperties.showColor ? elem.linkColorScale(d) : "white";
     };
 
     this.getGroupColor = function(d) {
-      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : "grey";
+      return elem.nodeProperties.showColor ? elem.groupColorScale(d) : "white";
     };
 
     this.setDates();

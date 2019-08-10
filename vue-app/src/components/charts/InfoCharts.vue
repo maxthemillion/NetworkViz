@@ -168,14 +168,13 @@ export default {
 
 #s-chart-title{
     left:5%;
-    color: grey;
+    color: white;
     position:relative;
 }
 
 #chartLine {
-    stroke: #3d4c77;
+    stroke: white;
     stroke-width: 1px;
-    opacity: 0.7;
     fill: transparent;
 }
 
