@@ -114,7 +114,8 @@ export default {
 <style>
 
 #axis_container{
-    width: 100%
+    width: 100%;
+    height: 100%;
 }
 
 #main_axis{
@@ -136,7 +137,8 @@ export default {
 
 .slider-text {
   position: absolute;
-  width: 100%
+  width: 100%;
+  height: 100%
 }
 
 .slider-tray {

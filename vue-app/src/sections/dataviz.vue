@@ -139,7 +139,6 @@ export default {
 
 #slider-wrapper {
   width: 100%;
-  margin: 1.5em 0;
 }
 </style>
 
