@@ -23,25 +23,44 @@ export default {
 
   data() {
     return {
-      title: "Modularity"
+      title: "Modularity",
+      date: {},
+      select: {}
     };
   },
 
   watch: {
     currentDate: function() {
       this.updateCursorPosition(this.currentDate);
+    },
+    data: function() {
+      this.clear();
+      this.setUp(this.readModularity);
+      this.drawLine();
+      // this.drawAxis();
     }
   },
 
   methods: {
-    setUp: function(dataFunc) {
-      this.width = this.opts.width;
-      this.height = 80;
-      this.titleHeight = 0;
-      this.minDate = moment(this.opts.minDate);
-      this.maxDate = moment(this.opts.maxDate);
+    clear: function() {
+      d3.select("#s-chart-area")
+        .selectAll("*")
+        .remove();
+    },
 
-      this.select = {};
+    setUp: function(dataFunc) {
+      this.height = 80;
+      this.date = {
+        min: moment(Object.keys(this.data.groups).sort()[0]),
+        max: moment(
+          Math.max.apply(
+            Math,
+            this.data.links.map(function(o) {
+              return moment(o.timestamp);
+            })
+          )
+        )
+      };
 
       this.chartData = dataFunc(this.data, this);
       const domainMax = d3.max(this.chartData, d => d.value);
@@ -52,7 +71,7 @@ export default {
       this.select.chart = d3
         .select("#s-chart-area")
         .append("g")
-        .attr("transform", "translate(0," + this.titleHeight + ")");
+        .attr("transform", "translate(0,0)");
 
       this.x = d3
         .scaleTime()
@@ -63,7 +82,7 @@ export default {
             .node()
             .getBoundingClientRect().width
         ])
-        .domain([this.minDate, this.maxDate]);
+        .domain([this.date.min, this.date.max]);
 
       this.y = d3
         .scaleLinear()
@@ -81,13 +100,24 @@ export default {
       const _this = this;
       const valueline = d3
         .line()
-        .x(d => _this.x(moment(d.key, "YYYY-WW"))) // TODO: check the return value of this statement
+        .x(d => _this.x(moment(d.key, "YYYY-WW")))
         .y(d => _this.y(d.value));
 
       this.select.chart
         .append("path")
         .attr("id", "chartLine")
         .attr("d", valueline(this.chartData));
+
+      this.select.chart
+        .append("rect")
+        .attr("id", "s-chart-cursor")
+        .style(
+          "height",
+          d3
+            .select("#s-chart-area")
+            .node()
+            .getBoundingClientRect().height
+        );
     },
 
     drawAxis: function() {
@@ -121,17 +151,6 @@ export default {
       this.select.chart.selectAll(".xaxis .tick").remove();
       this.select.chart.selectAll(".tick line").remove();
       this.select.chart.selectAll(".tick text").attr("x", -6);
-
-      d3.selectAll("#s-chart-area")
-        .append("rect")
-        .attr("id", "s-chart-cursor")
-        .style(
-          "height",
-          d3
-            .select("#s-chart-area")
-            .node()
-            .getBoundingClientRect().height
-        );
     },
 
     readModularity: function() {
@@ -148,7 +167,7 @@ export default {
       return modularityData;
     },
     calcNumLinks: function() {
-      // const cDate = moment(this.minDate);
+      // const cDate = moment(this.date.min);
       const linkCount = d3
         .nest()
         .key(function(d) {
@@ -170,9 +189,9 @@ export default {
     }
   },
   mounted() {
-    this.setUp(this.calcNumLinks);
+    this.setUp(this.readModularity);
     this.drawLine();
-    this.drawAxis();
+    // this.drawAxis();
   }
 };
 </script>
@@ -199,6 +218,7 @@ export default {
   width: 100%;
   height: 70%;
   margin: 0 auto;
+  overflow: visible;
 }
 </style>
 

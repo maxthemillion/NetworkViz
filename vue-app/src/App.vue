@@ -24,10 +24,7 @@ export default {
       selected: ""
     };
   },
-  mounted() {
-    // eslint-disable-next-line
-    console.log("App loaded");
-  },
+  mounted() {},
   methods: {
     fetchData: async function(d) {
       this.selected = d;
@@ -39,7 +36,6 @@ export default {
         return data;
       });
       // eslint-disable-next-line
-      console.log("Message from #App: data loaded!");
     },
 
     parseDateStrings: function(data) {

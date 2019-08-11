@@ -19,10 +19,11 @@ import * as moment from "moment";
 export default {
   name: "Slider",
   props: {
-    network: Object
+    selected: {},
+    opts: {}
   },
   watch: {
-    network: function() {
+    selected: function() {
       this.generate();
     }
   },
@@ -33,18 +34,17 @@ export default {
       this.dispatchEvents();
     },
     setUp: function() {
-      this.width = this.network.chartWidth; // TODO: probably bad style. Create chart object instead? Or set global properties?
       this.height = "50";
       this.date = {
-        min: this.network.date.min,
-        max: this.network.date.max
+        min: this.opts.date.min,
+        max: this.opts.date.max
       };
 
       this.select = {};
       this.select.slider = d3.select(".slider");
 
       this.sliderTimeScale = d3
-        .scaleTime() // TODO: do I really need 2 scales here?
+        .scaleTime()
         .domain([this.date.min, this.date.max])
         .range([0, this.select.slider.node().getBoundingClientRect().width]);
 
@@ -100,12 +100,12 @@ export default {
         );
         value = Math.round(value);
 
-        const newDate = moment(value).startOf(_this.network.discreteInterval);
+        const newDate = moment(value).startOf("week");
         if (!newDate.isSame(_this.oldDate)) {
           _this.updateHandlePosition(newDate);
           _this.$emit("dateSelect", moment(newDate));
+          _this.$emit("dateSelectEnd", moment());
           _this.oldDate = moment(newDate);
-          _this.network.update(newDate);
         }
       });
     },
@@ -135,10 +135,6 @@ export default {
   width: 90%;
   margin: 0 auto;
   height: 30px;
-  opacity: 0.8;
-}
-
-.slider:hover {
   opacity: 1;
 }
 

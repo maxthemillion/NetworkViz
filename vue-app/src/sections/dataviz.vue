@@ -2,12 +2,18 @@
   <div id="content-wrapper">
     <div id="inner-content-wrapper">
       <div id="main-board">
-        <svg id="graph" class="remove-on-load" />
+        <Network
+          v-if="initialized"
+          :data="data"
+          :opts="opts"
+          :currentDate="currentDate"
+          :lastUpdated="lastUpdated"
+        />
       </div>
       <div id="sub-board">
-        <div id="chart-wrapper" class="remove-on-load">
+        <div id="chart-wrapper">
           <ModularityChart
-            v-if="net.initialized"
+            v-if="initialized"
             :data="data"
             :opts="opts"
             :currentDate="currentDate"
@@ -17,9 +23,12 @@
       </div>
       <div id="slider-wrapper">
         <Slider
-          v-if="net.initialized"
-          :network="net"
+          v-if="initialized"
+          :opts="opts"
+          :selected="selected"
           v-on:dateSelect="setDate"
+          v-on:dateSelectEnd="setEnd"
+          :key="componentKey"
         />
       </div>
     </div>
@@ -27,9 +36,8 @@
 </template>
 
 <script>
-import * as d3 from "d3";
 import * as moment from "moment";
-import Network from "../js/network.js";
+import Network from "../components/charts/Network.vue";
 import Slider from "../components/ui/slider.vue";
 import ModularityChart from "../components/charts/InfoCharts.vue";
 // import LinksChart from "../components/charts/InfoCharts.vue";
@@ -38,7 +46,8 @@ export default {
   name: "Dataviz",
   components: {
     Slider,
-    ModularityChart
+    ModularityChart,
+    Network
   },
   props: {
     selected: String,
@@ -46,50 +55,49 @@ export default {
   },
   data: function() {
     return {
-      net: Object,
-      opts: {},
-      currentDate: {}
+      currentDate: {},
+      lastUpdated: {},
+      initialized: false,
+      reload: false,
+      opts: {
+        linkType: "all",
+        showGroupColor: false,
+        showLinkColor: false,
+        date: {}
+      },
+      componentKey: 0
     };
   },
   watch: {
     data: function() {
-      this.generateNet();
+      this.initialized = this.selected !== "";
+
+      this.componentKey += 1;
+
+      this.opts.date.min = moment(Object.keys(this.data.groups).sort()[0]);
+      this.opts.date.max = moment(
+        Math.max.apply(
+          Math,
+          this.data.links.map(function(o) {
+            return moment(o.timestamp);
+          })
+        )
+      );
+      this.reload = false;
     }
   },
   methods: {
-    generateNet: function() {
-      console.log(this.selected !== "");
-      if (this.selected !== "") {
-        d3.selectAll(".remove-on-load")
-          .selectAll("*")
-          .remove();
-        this.opts = {
-          svg: d3.select("#graph"),
-          linkType: "all",
-          showGroupColor: false,
-          showLinkColor: false,
-          minDate: moment(Object.keys(this.data.groups).sort()[0]),
-          maxDate: moment(
-            Math.max.apply(
-              Math,
-              this.data.links.map(function(o) {
-                return moment(o.timestamp);
-              })
-            )
-          ),
-          width: document.querySelector("#graph").clientWidth,
-          height: document.querySelector("#graph").clientHeight,
-          discreteInterval: "week"
-        };
-        this.net = new Network(this.data, this.opts);
-      }
-    },
     setDate: function(d) {
       this.currentDate = d;
+    },
+    setEnd: function(d) {
+      this.lastUpdated = d;
     }
   },
-  mounted() {
-    console.log("Message from #dataviz: app loaded");
+  computed: {
+    render: function() {
+      return this.initialized && !this.reload;
+    }
   }
 };
 </script>
@@ -149,25 +157,6 @@ export default {
 </style>
 
 <style lang="css">
-
-.nodeCircle{
-  stroke: white;
-  stroke-width: 1px;
-}
-
-.axis {
-  color: grey;
-  font-size: 0.8em;
-}
-
-.axis line {
-  stroke: grey;
-}
-
-.axis path {
-  stroke: grey;
-}
-
 #chart-wrapper{
   margin-top: 10px;
 }

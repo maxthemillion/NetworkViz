@@ -16,7 +16,7 @@
 import * as d3 from "d3";
 const transitionDuration = 1000;
 // const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
-const projectNames = ["OneDrive", "gatsbyjs"];
+const projectNames = ["", "OneDrive", "gatsbyjs"];
 
 export default {
   name: "Opener",
