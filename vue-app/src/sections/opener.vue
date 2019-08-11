@@ -1,132 +1,124 @@
 <template>
-    <div id='opener'>
-        <div id='title-wrapper'> 
-        <div id='main-title'>
-            <h1>Explore GitHub Communication Networks!</h1>
-        </div> 
-        <div id='sub-title'>Choose a project:</div>
-        <div id='selector-wrapper'>
-            <select id='selector'>
-            </select>
-        </div>
-        </div>
+  <div id="opener">
+    <div id="title-wrapper">
+      <div id="main-title">
+        <h1>Explore GitHub Communication Networks!</h1>
+      </div>
+      <div id="sub-title">Choose a project:</div>
+      <div id="selector-wrapper">
+        <select id="selector"> </select>
+      </div>
     </div>
+  </div>
 </template>
-
 
 <script>
 import * as d3 from "d3";
 const transitionDuration = 1000;
-//const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
-const projectNames = ['OneDrive', 'gatsbyjs'];
-
+// const projectNames = ['OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
+const projectNames = ["OneDrive", "gatsbyjs"];
 
 export default {
   name: "Opener",
   props: {},
   data: function() {
-        return  {
-            selected : ''
-        }
-      },
+    return {
+      selected: ""
+    };
+  },
   methods: {
     showSubtitle: function() {
-      d3
-        .select("#sub-title")
+      d3.select("#sub-title")
         .transition()
         .duration(transitionDuration)
         .style("opacity", 1);
     },
-    addOptions: function(){
-        d3.select('#selector')
-            .on('change', this.dropdownChange);
+    addOptions: function() {
+      d3.select("#selector").on("change", this.dropdownChange);
 
-        d3.select('#selector')
-            .selectAll('option')
-            .data(projectNames)
-            .enter()
-            .append('option')
-            .attr('value', (d) => d)
-            .text((d) => d)
+      d3.select("#selector")
+        .selectAll("option")
+        .data(projectNames)
+        .enter()
+        .append("option")
+        .attr("value", d => d)
+        .text(d => d);
     },
-    showOptions: function(){
-        d3.select('#selector')
-            .transition()
-            .delay(transitionDuration)
-            .duration(transitionDuration)
-            .style('opacity', 1)
+    showOptions: function() {
+      d3.select("#selector")
+        .transition()
+        .delay(transitionDuration)
+        .duration(transitionDuration)
+        .style("opacity", 1);
     },
-    dropdownChange: function () {
-      this.selected = d3.select('#selector').property('value')  
+    dropdownChange: function() {
+      this.selected = d3.select("#selector").property("value");
 
-        d3.select('#caret')
-            .transition()
-            .duration(1000)
-            .style('opacity', '1')
+      d3.select("#caret")
+        .transition()
+        .duration(1000)
+        .style("opacity", "1");
 
-        this.$emit('user-select', this.selected)
-    },    
+      this.$emit("user-select", this.selected);
+    }
   },
   computed: {},
   mounted() {
-      this.showSubtitle();
-      this.addOptions();
-      this.showOptions();
+    this.showSubtitle();
+    this.addOptions();
+    this.showOptions();
   }
 };
 </script>
 
 <style scoped>
 h1 {
-    font-weight: lighter;
-    margin-top: 0px;
-    margin-bottom:0.2em;
+  font-weight: lighter;
+  margin-top: 0px;
+  margin-bottom: 0.2em;
 }
 
 #opener {
-    width: 100vw;
-    height: 15vh;
-    position: relative;
-    top:0;
-    left:0;
+  width: 100vw;
+  height: 15vh;
+  position: relative;
+  top: 0;
+  left: 0;
 }
 
-#title-wrapper{
-    position:relative;
-    left: 7.5%;
-    top: 15%;
-    width:80%;
+#title-wrapper {
+  position: relative;
+  left: 7.5%;
+  top: 15%;
+  width: 80%;
 }
 
-#sub-title{
-    opacity:0;
-    position: relative;
-    display: inline-block;
-    margin-right: 1em;
-    margin-bottom: 1em;
+#sub-title {
+  opacity: 0;
+  position: relative;
+  display: inline-block;
+  margin-right: 1em;
+  margin-bottom: 1em;
 }
 
 #main-title {
-    position: relative;
-  }
-
-#selector-wrapper{
-    display: inline-block;
+  position: relative;
 }
 
-#selector{
-    opacity:0;
-    position: relative;
-    color: deepskyblue;
-    background-color: #12111d;
-    font-size: 1em; 
-    border-color: #12111d;
-    border-radius:0px;
-    display: inline-block;
-    height: 2em;
-    padding:0 20px;
+#selector-wrapper {
+  display: inline-block;
 }
 
+#selector {
+  opacity: 0;
+  position: relative;
+  color: deepskyblue;
+  background-color: #12111d;
+  font-size: 1em;
+  border-color: #12111d;
+  border-radius: 0px;
+  display: inline-block;
+  height: 2em;
+  padding: 0 20px;
+}
 </style>
-
-

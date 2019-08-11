@@ -2,17 +2,26 @@
   <div id="content-wrapper">
     <div id="inner-content-wrapper">
       <div id="main-board">
-        <svg id="graph"  class='remove-on-load'/>
+        <svg id="graph" class="remove-on-load" />
       </div>
       <div id="sub-board">
-        <div id="chart-wrapper" class='remove-on-load'>
-           <ModularityChart v-if='net.initialized' :data='data' :opts='opts' :currentDate='currentDate' />
+        <div id="chart-wrapper" class="remove-on-load">
+          <ModularityChart
+            v-if="net.initialized"
+            :data="data"
+            :opts="opts"
+            :currentDate="currentDate"
+          />
         </div>
-        <div id="legend" class='remove-on-load'></div>
+        <div id="legend" class="remove-on-load"></div>
       </div>
-      <div id='slider-wrapper'>
-          <Slider v-if='net.initialized' :network='net' v-on:dateSelect='setDate'/>
-        </div>
+      <div id="slider-wrapper">
+        <Slider
+          v-if="net.initialized"
+          :network="net"
+          v-on:dateSelect="setDate"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -21,10 +30,9 @@
 import * as d3 from "d3";
 import * as moment from "moment";
 import Network from "../js/network.js";
-import Slider from '../components/ui/slider.vue'
-import ModularityChart from '../components/charts/InfoCharts.vue'
-import LinksChart from '../components/charts/InfoCharts.vue'
-import * as cs from "../js/charts.js";
+import Slider from "../components/ui/slider.vue";
+import ModularityChart from "../components/charts/InfoCharts.vue";
+// import LinksChart from "../components/charts/InfoCharts.vue";
 
 export default {
   name: "Dataviz",
@@ -40,7 +48,7 @@ export default {
     return {
       net: Object,
       opts: {},
-      currentDate: {},
+      currentDate: {}
     };
   },
   watch: {
@@ -52,8 +60,7 @@ export default {
     generateNet: function() {
       console.log(this.selected !== "");
       if (this.selected !== "") {
-        d3
-          .selectAll(".remove-on-load")
+        d3.selectAll(".remove-on-load")
           .selectAll("*")
           .remove();
         this.opts = {
@@ -78,7 +85,7 @@ export default {
       }
     },
     setDate: function(d) {
-      this.currentDate = d
+      this.currentDate = d;
     }
   },
   mounted() {
@@ -86,7 +93,6 @@ export default {
   }
 };
 </script>
-
 
 <style lang="css" scoped>
 
@@ -142,7 +148,7 @@ export default {
 }
 </style>
 
-<style lang='css'>
+<style lang="css">
 
 .nodeCircle{
   stroke: white;
@@ -165,5 +171,4 @@ export default {
 #chart-wrapper{
   margin-top: 10px;
 }
-
 </style>
