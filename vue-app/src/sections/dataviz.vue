@@ -18,6 +18,12 @@
             :opts="opts"
             :currentDate="currentDate"
           />
+          <LinksChart
+            v-if="initialized"
+            :data="data"
+            :opts="opts"
+            :currentDate="currentDate"
+          />
         </div>
         <div id="legend" class="remove-on-load"></div>
       </div>
@@ -39,14 +45,15 @@
 import * as moment from "moment";
 import Network from "../components/charts/Network.vue";
 import Slider from "../components/ui/slider.vue";
-import ModularityChart from "../components/charts/Modularity.vue";
-// import LinksChart from "../components/charts/InfoCharts.vue";
+import ModularityChart from "../components/charts/ModularityChart.vue";
+import LinksChart from "../components/charts/LinksChart.vue";
 
 export default {
   name: "Dataviz",
   components: {
     Slider,
     ModularityChart,
+    LinksChart,
     Network
   },
   props: {

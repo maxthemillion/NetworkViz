@@ -31,7 +31,7 @@ export default {
 
   methods: {
     clear: function() {
-      d3.select("#s-chart-area")
+      d3.select(this.$refs.chartArea)
         .selectAll("*")
         .remove();
     },
@@ -54,10 +54,10 @@ export default {
       const domainMax = d3.max(this.chartData, d => d.value);
       const domainMin = d3.min(this.chartData, d => Math.min(d.value, 0));
 
-      d3.select("#s-chart-wrapper").attr("height", this.height);
+      d3.select(this.$refs.chartWrapper).attr("height", this.height);
 
       this.select.chart = d3
-        .select("#s-chart-area")
+        .select(this.$refs.chartArea)
         .append("g")
         .attr("transform", "translate(0,0)");
 
@@ -66,7 +66,7 @@ export default {
         .range([
           0,
           d3
-            .select("#s-chart-area")
+            .select(this.$refs.chartArea)
             .node()
             .getBoundingClientRect().width
         ])
@@ -76,7 +76,7 @@ export default {
         .scaleLinear()
         .range([
           d3
-            .select("#s-chart-area")
+            .select(this.$refs.chartArea)
             .node()
             .getBoundingClientRect().height,
           0
@@ -102,7 +102,7 @@ export default {
         .style(
           "height",
           d3
-            .select("#s-chart-area")
+            .select(this.$refs.chartArea)
             .node()
             .getBoundingClientRect().height
         );
@@ -141,26 +141,8 @@ export default {
       this.select.chart.selectAll(".tick text").attr("x", -6);
     },
 
-    calcNumLinks: function() {
-      // const cDate = moment(this.date.min);
-      const linkCount = d3
-        .nest()
-        .key(function(d) {
-          return moment(d.timestamp).format("YYYY-WW");
-        })
-        .rollup(function(values) {
-          return d3.sum(values, function() {
-            return 1;
-          });
-        })
-        .entries(this.data.links)
-        .sort(function(a, b) {
-          return d3.ascending(a.key, b.key);
-        });
-      return linkCount;
-    },
     updateCursorPosition: function(currentDate) {
-      d3.selectAll("#s-chart-cursor").attr("x", this.x(currentDate) + "px");
+      d3.selectAll('#s-chart-cursor').attr("x", this.x(currentDate) + "px");
     }
   },
   mounted() {

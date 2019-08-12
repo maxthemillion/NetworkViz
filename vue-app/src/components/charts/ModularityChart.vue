@@ -1,5 +1,5 @@
 <script>
-import Linechart from "./InfoCharts.vue";
+import Linechart from "./LineChart.vue";
 import * as moment from "moment";
 
 export default {

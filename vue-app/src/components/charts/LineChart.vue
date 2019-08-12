@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div id="s-chart-title">{{ this.title }}</div>
-    <div id="s-chart-wrapper">
-      <div id="s-chart-wrapper-centering">
-        <svg id="s-chart-area"></svg>
+    <div id="s-chart-title" ref="chartTitle">{{ this.title }}</div>
+    <div id="s-chart-wrapper" ref="chartWrapper">
+      <div id="s-chart-wrapper-centering" ref="chartCentering">
+        <svg id="s-chart-area" ref="chartArea"></svg>
       </div>
     </div>
   </div>
