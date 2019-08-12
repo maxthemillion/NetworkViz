@@ -12,7 +12,7 @@
       </div>
       <div id="sub-board">
         <div id="chart-wrapper">
-          <ModularityMixin
+          <ModularityChart
             v-if="initialized"
             :data="data"
             :opts="opts"
@@ -39,14 +39,14 @@
 import * as moment from "moment";
 import Network from "../components/charts/Network.vue";
 import Slider from "../components/ui/slider.vue";
-import ModularityMixin from "../components/charts/Modularity.vue";
+import ModularityChart from "../components/charts/Modularity.vue";
 // import LinksChart from "../components/charts/InfoCharts.vue";
 
 export default {
   name: "Dataviz",
   components: {
     Slider,
-    ModularityMixin,
+    ModularityChart,
     Network
   },
   props: {

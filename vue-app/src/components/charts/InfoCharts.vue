@@ -10,11 +10,11 @@
 </template>
 
 <script>
-import Linechart from "../../js/linechart.js";
+import ChartLogic from "../../js/linechart.js";
 
 export default {
-  name: "ModularityChart",
-  extends: Linechart
+  name: "Linechart",
+  extends: ChartLogic
 };
 </script>
 

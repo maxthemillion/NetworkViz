@@ -11,19 +11,19 @@ export default {
 
   data() {
     return {
-      title: "Modularity",
+      title: "",
       date: {},
-      select: {}
+      select: {},
+      dataFunc: Function
     };
   },
-
   watch: {
     currentDate: function() {
       this.updateCursorPosition(this.currentDate);
     },
     data: function() {
       this.clear();
-      this.setUp(this.readModularity);
+      this.setUp();
       this.drawLine();
       // this.drawAxis();
     }
@@ -36,7 +36,7 @@ export default {
         .remove();
     },
 
-    setUp: function(dataFunc) {
+    setUp: function() {
       this.height = 80;
       this.date = {
         min: moment(Object.keys(this.data.groups).sort()[0]),
@@ -50,7 +50,7 @@ export default {
         )
       };
 
-      this.chartData = dataFunc(this.data, this);
+      this.chartData = this.dataFunc();
       const domainMax = d3.max(this.chartData, d => d.value);
       const domainMin = d3.min(this.chartData, d => Math.min(d.value, 0));
 
@@ -141,19 +141,6 @@ export default {
       this.select.chart.selectAll(".tick text").attr("x", -6);
     },
 
-    readModularity: function() {
-      const modularityData = [];
-      const keys = Object.keys(this.data.modularity).sort();
-
-      for (let i = 0; i < keys.length; ++i) {
-        modularityData.push({
-          key: moment(keys[i]).format("YYYY-WW"),
-          value: +this.data.modularity[keys[i]]
-        });
-      }
-
-      return modularityData;
-    },
     calcNumLinks: function() {
       // const cDate = moment(this.date.min);
       const linkCount = d3
@@ -177,7 +164,7 @@ export default {
     }
   },
   mounted() {
-    this.setUp(this.readModularity);
+    this.setUp();
     this.drawLine();
     // this.drawAxis();
   }

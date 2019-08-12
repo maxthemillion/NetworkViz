@@ -1,8 +1,31 @@
 <script>
-import ModularityChart from "./InfoCharts.vue";
+import Linechart from "./InfoCharts.vue";
+import * as moment from "moment";
 
 export default {
-  name: "ModularityMixin",
-  mixins: [ModularityChart]
+  name: "ModularityChart",
+  mixins: [Linechart],
+  data() {
+    return {
+      dataFunc: this.readModularity,
+      title: "Modularity"
+    };
+  },
+  methods: {
+    readModularity: function() {
+      const modularityData = [];
+      const keys = Object.keys(this.data.modularity).sort();
+
+      for (let i = 0; i < keys.length; ++i) {
+        modularityData.push({
+          key: moment(keys[i]).format("YYYY-WW"),
+          value: +this.data.modularity[keys[i]]
+        });
+      }
+
+      return modularityData;
+    }
+  },
+  mounted() {}
 };
 </script>
