@@ -25,7 +25,7 @@ export default {
       this.clear();
       this.setUp();
       this.drawLine();
-      // this.drawAxis();
+      this.drawAxis();
     }
   },
 
@@ -106,6 +106,15 @@ export default {
             .node()
             .getBoundingClientRect().height
         );
+
+      this.select.label = this.select.chart.append("g").attr("id", "label");
+      this.select.label.append("rect").attr("id", "label-background");
+      this.select.label
+        .append("text")
+        .attr("y", 11)
+        .attr("x", 5)
+        .attr("id", "label-text")
+        .text("test");
     },
 
     drawAxis: function() {
@@ -114,12 +123,7 @@ export default {
         .attr("transform", "translate(0," + this.height + ")")
         .attr("class", "axis")
         .attr("class", "xaxis")
-        .call(
-          d3
-            .axisBottom(this.x)
-            .ticks(d3.timeMonth.every(6))
-            .tickFormat(d3.timeFormat("%d %B %y"))
-        );
+        .call(d3.axisBottom(this.x));
 
       this.select.chart
         .append("g")
@@ -129,6 +133,7 @@ export default {
         .call(
           d3
             .axisLeft(this.y)
+            .ticks(2)
             .tickValues([
               d3.min(this.chartData, d => d.value),
               d3.max(this.chartData, d => d.value)
@@ -138,16 +143,20 @@ export default {
       this.select.chart.selectAll(".domain").remove();
       this.select.chart.selectAll(".xaxis .tick").remove();
       this.select.chart.selectAll(".tick line").remove();
-      this.select.chart.selectAll(".tick text").attr("x", -6);
+      this.select.chart.selectAll(".tick text").attr("x", -15);
     },
 
     updateCursorPosition: function(currentDate) {
-      d3.selectAll('#s-chart-cursor').attr("x", this.x(currentDate) + "px");
+      d3.selectAll("#s-chart-cursor").attr("x", this.x(currentDate) + "px");
+      d3.selectAll("#label").attr(
+        "transform",
+        "translate(" + this.x(currentDate) + " 0)"
+      );
     }
   },
   mounted() {
     this.setUp();
     this.drawLine();
-    // this.drawAxis();
+    this.drawAxis();
   }
 };

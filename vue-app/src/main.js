@@ -1,8 +1,8 @@
-import Vue from 'vue';
-import App from './App.vue';
-import VueWorker from 'vue-worker';
-import 'typeface-aileron';
-import * as d3 from 'd3'
+import Vue from "vue";
+import App from "./App.vue";
+import VueWorker from "vue-worker";
+import "typeface-aileron";
+import * as d3 from "d3";
 
 Vue.use(VueWorker);
 
@@ -15,5 +15,5 @@ d3.selection.prototype.moveToFront = function() {
 };
 
 new Vue({
-  render: (h) => h(App),
-}).$mount('#app');
+  render: h => h(App)
+}).$mount("#app");

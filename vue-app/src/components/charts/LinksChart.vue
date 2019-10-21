@@ -8,28 +8,23 @@ export default {
   mixins: [Linechart],
   data() {
     return {
-      dataFunc: this.calcNoLinks,
+      dataFunc: this.readNoLinks,
       title: "No of Links"
     };
   },
   methods: {
-    calcNoLinks: function() {
-      // const cDate = moment(this.date.min);
-      const linkCount = d3
-        .nest()
-        .key(function(d) {
-          return moment(d.timestamp).format("YYYY-WW");
-        })
-        .rollup(function(values) {
-          return d3.sum(values, function() {
-            return 1;
-          });
-        })
-        .entries(this.data.links)
-        .sort(function(a, b) {
-          return d3.ascending(a.key, b.key);
+    readNoLinks: function() {
+      const noLinks = [];
+      const keys = Object.keys(this.data.no_links).sort();
+
+      for (let i = 0; i < keys.length; ++i) {
+        noLinks.push({
+          key: moment(keys[i]).format("YYYY-WW"),
+          value: +this.data.no_links[keys[i]]
         });
-      return linkCount;
+      }
+
+      return noLinks;
     }
   },
   mounted() {}

@@ -1,18 +1,18 @@
-import * as d3 from 'd3';
-import * as moment from 'moment';
+import * as d3 from "d3";
+import * as moment from "moment";
 
 export default class Filter {
   constructor(showLinkColor) {
     this.linkInterval = 30;
     this.showLinkColor = showLinkColor; // TODO: missplaced attribute. move to better fit.
-    this._d3 = d3
+    this._d3 = d3;
   }
 
   filterNodes(nodes, links) {
     const linkedNodes = {};
 
     links.forEach(function(d) {
-      if ((typeof d.source) === 'object') {
+      if (typeof d.source === "object") {
         linkedNodes[d.source.id] = 1;
         linkedNodes[d.target.id] = 1;
       } else {
@@ -27,9 +27,9 @@ export default class Filter {
 
     const nodeIds = Object.keys(linkedNodes);
     nodeIds.forEach(function(d) {
-      const res = nodes.find((x) => x.id === +d);
+      const res = nodes.find(x => x.id === +d);
       if (res === undefined) {
-        console.log('node missing ' + d);
+        console.log("node missing " + d);
       }
     });
 
@@ -44,16 +44,20 @@ export default class Filter {
   }
 
   filterGroups(groups, date) {
-    let dstring = date.format('YYYY-MM-DD');
+    let dstring = date.format("YYYY-MM-DD");
     let res = groups[dstring];
 
     if (res === undefined) {
-      dstring = moment(date).add(1, 'day').format('YYYY-MM-DD');
+      dstring = moment(date)
+        .add(1, "day")
+        .format("YYYY-MM-DD");
       res = groups[dstring];
     }
 
     if (res === undefined) {
-      dstring = moment(date).subtract(1, 'day').format('YYYY-MM-DD');
+      dstring = moment(date)
+        .subtract(1, "day")
+        .format("YYYY-MM-DD");
       res = groups[dstring];
     }
 
@@ -61,15 +65,20 @@ export default class Filter {
   }
 
   _forDate(date, links) {
-    date = moment(date)
-    links = d3.nest().key(function(d){return moment(d.timestamp).format('YYYY-WW')}).map(links)
-    links = links["$"+date.format('YYYY-WW')]
+    date = moment(date);
+    links = d3
+      .nest()
+      .key(function(d) {
+        return moment(d.timestamp).format("YYYY-WW");
+      })
+      .map(links);
+    links = links["$" + date.format("YYYY-WW")];
     return links;
   }
 
   _forType(linkType, links) {
     links = links.filter(function(d) {
-      if (linkType === 'all') {
+      if (linkType === "all") {
         return true;
       } else {
         return d.rel_type === linkType;
@@ -81,22 +90,23 @@ export default class Filter {
 
   _consolidate(links) {
     const elem = this;
-    const linkMap = d3.nest()
-        .key(function(d) {
-          return elem.showLinkColor ? d.rel_type : 'grey';
-        })
-        .key(function(d) {
-          return d.source;
-        })
-        .key(function(d) {
-          return d.target;
-        })
-        .rollup(function(values) {
-          return d3.sum(values, function(d) {
-            return 1;
-          });
-        })
-        .object(links);
+    const linkMap = d3
+      .nest()
+      .key(function(d) {
+        return elem.showLinkColor ? d.rel_type : "grey";
+      })
+      .key(function(d) {
+        return d.source;
+      })
+      .key(function(d) {
+        return d.target;
+      })
+      .rollup(function(values) {
+        return d3.sum(values, function(d) {
+          return 1;
+        });
+      })
+      .object(links);
 
     // TODO: There should be a much cleaner way to solve this...
     // probably i could flatten the object like this:
@@ -112,11 +122,11 @@ export default class Filter {
         for (let k = 0; k < targetKeys.length; ++k) {
           const weight = currentSourceData[targetKeys[k]];
           resArray.push({
-            'source': +sourceKeys[j],
-            'target': +targetKeys[k],
-            'weight': +weight,
-            'rel_type': typeKeys[i],
-            'link_id': sourceKeys[j] + '-' + targetKeys[k],
+            source: +sourceKeys[j],
+            target: +targetKeys[k],
+            weight: +weight,
+            rel_type: typeKeys[i],
+            link_id: sourceKeys[j] + "-" + targetKeys[k]
           });
         }
       }
@@ -124,4 +134,3 @@ export default class Filter {
     return resArray;
   }
 }
-

@@ -46,7 +46,7 @@ export default {
 
 <style>
 #s-chart-title {
-  left: 5%;
+  left: -12px;
   color: white;
   position: relative;
 }
@@ -62,5 +62,18 @@ export default {
   fill: deepskyblue;
   position: absolute;
   opacity: 1;
+}
+
+#label-background {
+  height: 15px;
+  width: 30px;
+  fill: deepskyblue;
+  opacity:0.4;
+  position: relative;
+}
+
+#label-text {
+  font-size:10px;
+  fill:white;
 }
 </style>
