@@ -19,7 +19,7 @@ export default {
 
       for (let i = 0; i < keys.length; ++i) {
         modularityData.push({
-          key: moment(keys[i]).format("YYYY-WW"),
+          key: moment(keys[i]).startOf('isoWeek').format("YYYY-MM-DD"),
           value: +this.data.modularity[keys[i]]
         });
       }

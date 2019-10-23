@@ -114,7 +114,7 @@ export default {
 <style lang="css" scoped>
 
 #content-wrapper {
-  height: 85vh;
+  min-height: 85vh;
   min-width: 100vw;
   position: relative;
 }
@@ -133,6 +133,7 @@ export default {
   position: relative;
   display: inline-block;
   min-width: 300px;
+  min-height:400px;
   float: left;
 }
 

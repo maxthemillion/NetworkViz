@@ -90,7 +90,7 @@ export default {
       const _this = this;
       const valueline = d3
         .line()
-        .x(d => _this.x(moment(d.key, "YYYY-WW")))
+        .x(d => _this.x(moment(d.key, "YYYY-MM-DD")))
         .y(d => _this.y(d.value));
 
       this.select.chart
@@ -159,7 +159,7 @@ export default {
     },
 
     updateLabelText: function(currentDate) {
-      const lookup = currentDate.format("YYYY-WW");
+      const lookup = currentDate.format("YYYY-MM-DD");
 
       const idx = this.chartData
         .map(function(d) {

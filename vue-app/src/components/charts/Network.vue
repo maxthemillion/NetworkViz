@@ -2,6 +2,10 @@
   <div id="wrapper">
     <svg id="graph">
       <g id="chartLayer" transform="translate(0,0)"></g>
+      <g id='resetZoomButton' transform="translate(15,4)" v-on:click='resetZoom' >
+        <rect x=40 y=0 width='8em' height='2em' rx=5 stroke='deepskyblue' fill=None ></rect>
+        <text x=55 y=1.4em fill='deepskyblue'>reset zoom  </text>
+      </g>
     </svg>
   </div>
 </template>
@@ -125,25 +129,12 @@ export default {
       function zoomed() {
         _this.select.chartLayer.attr("transform", d3.event.transform);
       }
-
-      const gButtons = this.svg
-        .append("g")
-        .attr("id", "zoom_buttons")
-        .attr("transform", "translate(8, 8)");
-
-      const reset = gButtons
-        .append("rect")
-        .attr("width", "1em")
-        .attr("height", "1em")
-        .text("reset")
-        .attr("fill", "grey");
-
-      reset.on("click", function() {
-        _this.svg
+    },
+    resetZoom() {
+        this.svg
           .transition()
           .duration(750)
-          .call(_this.zoom.transform, d3.zoomIdentity);
-      });
+          .call(this.zoom.transform, d3.zoomIdentity);
     },
     initNodePositions() {
       const elem = this;
@@ -456,5 +447,17 @@ export default {
 #graph {
   width: 100%;
   height: 100%;
+}
+
+#resetZoomButton{
+  font-size: 12px;
+  opacity: 0.8;
+  fill: black;
+  cursor: pointer;
+  pointer-events: all;
+}
+
+#resetZoomButton:hover{
+  opacity:1;
 }
 </style>

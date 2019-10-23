@@ -45,6 +45,8 @@ export default {
         max: this.opts.date.max
       };
 
+      this.currentDate = moment(this.date.min).startOf('isoWeek').format('DD MMMM YYYY')
+
       this.select = {};
       this.select.slider = d3.select(".slider");
 
@@ -175,6 +177,7 @@ export default {
   background-color: deepskyblue;
   top: -7px;
   left: -7px;
+  cursor:pointer;
 }
 
 .slider-label{
@@ -184,6 +187,10 @@ export default {
     position: absolute;
     width: 100px;
 
+}
+
+#axis_container{
+  overflow: visible;
 }
 
 

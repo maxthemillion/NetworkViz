@@ -48,15 +48,9 @@ export default {
         .transition()
         .delay(transitionDuration)
         .duration(transitionDuration)
-        .style("opacity", 1);
     },
     dropdownChange: function() {
       this.selection = d3.select("#selector").property("value");
-
-      d3.select("#caret")
-        .transition()
-        .duration(1000)
-        .style("opacity", "1");
 
       this.$emit("userSelect", this.selection);
     }
@@ -79,7 +73,7 @@ h1 {
 
 #opener {
   width: 100vw;
-  height: 15vh;
+  min-height: 15vh;
   position: relative;
   top: 0;
   left: 0;
@@ -109,15 +103,20 @@ h1 {
 }
 
 #selector {
-  opacity: 0;
+  opacity: 0.8;
   position: relative;
   color: deepskyblue;
   background-color: #12111d;
   font-size: 1em;
-  border-color: #12111d;
-  border-radius: 0px;
+  border-color:deepskyblue;
+  border-radius: 5px;
   display: inline-block;
   height: 2em;
   padding: 0 20px;
+  cursor:pointer;
+}
+
+#selector:hover{
+  opacity:1;
 }
 </style>
