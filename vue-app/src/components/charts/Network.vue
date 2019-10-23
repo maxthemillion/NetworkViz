@@ -1,7 +1,7 @@
 <template>
   <div id="wrapper">
     <svg id="graph">
-      <g id="chartLayer" transform="scale(1.5,1.5) translate([0,0])"></g>
+      <g id="chartLayer" transform="translate(0,0)"></g>
     </svg>
   </div>
 </template>
