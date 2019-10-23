@@ -9,6 +9,7 @@ export default {
   data() {
     return {
       dataFunc: this.readNoLinks,
+      formatLabel: this.formatL,
       title: "No of Links"
     };
   },
@@ -25,6 +26,10 @@ export default {
       }
 
       return noLinks;
+    },
+    formatL: function(value) {
+      const formatted = value
+      return formatted
     }
   },
   mounted() {}

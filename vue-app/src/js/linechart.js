@@ -14,12 +14,14 @@ export default {
       title: "",
       date: {},
       select: {},
-      dataFunc: Function
+      dataFunc: Function,
+      formatLabel: Function
     };
   },
   watch: {
     currentDate: function() {
       this.updateCursorPosition(this.currentDate);
+      this.updateLabelText(this.currentDate);
     },
     data: function() {
       this.clear();
@@ -113,8 +115,9 @@ export default {
         .append("text")
         .attr("y", 11)
         .attr("x", 5)
-        .attr("id", "label-text")
-        .text("test");
+        .attr("id", "label-text");
+
+      this.updateLabelText(this.currentDate);
     },
 
     drawAxis: function() {
@@ -147,11 +150,31 @@ export default {
     },
 
     updateCursorPosition: function(currentDate) {
-      d3.selectAll("#s-chart-cursor").attr("x", this.x(currentDate) + "px");
-      d3.selectAll("#label").attr(
-        "transform",
-        "translate(" + this.x(currentDate) + " 0)"
-      );
+      this.select.chart
+        .selectAll("#s-chart-cursor")
+        .attr("x", this.x(currentDate) + "px");
+      this.select.chart
+        .selectAll("#label")
+        .attr("transform", "translate(" + this.x(currentDate) + " 0)");
+    },
+
+    updateLabelText: function(currentDate) {
+      const lookup = currentDate.format("YYYY-WW");
+
+      const idx = this.chartData
+        .map(function(d) {
+          return d.key;
+        })
+        .indexOf(lookup);
+
+      let val;
+      if (idx > -1) {
+        val = this.formatLabel(this.chartData[idx].value);
+      } else {
+        val = "NA";
+      }
+
+      this.select.chart.selectAll("#label-text").text(val);
     }
   },
   mounted() {

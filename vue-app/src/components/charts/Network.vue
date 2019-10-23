@@ -9,6 +9,7 @@
 <script>
 import * as d3 from "d3";
 import Filter from "./../../js/filter.js";
+import * as moment from "moment";
 
 export default {
   name: "Network",
@@ -157,17 +158,13 @@ export default {
        * minDate: set to the earliest date occurence in the data
        * oldDate: (date currently selected) set to the beginning of the slider
        *          interval which covers the minimum Date
-       * offset:  difference in days between minDate and oldDate
        * maxDate: set to the last date occurence in the data
-       *
        */
       this.date.min = this.opts.date.min;
       this.date.max = this.opts.date.max;
 
-      this.oldDate = this.date.min;
-      this.oldDate.startOf("week");
-
-      this.offset = this.date.min.diff(this.oldDate, "days"); // negative
+      this.oldDate = moment(this.date.min);
+      this.oldDate.startOf("isoWeek");
     },
     draw() {
       const transitionDuration = 1000;
@@ -276,10 +273,9 @@ export default {
 
       this.highlight();
     },
-    update(newDate) {
-      newDate = newDate.add(this.offset, "days");
+    update(currentDate) {
       this.current.links = this.f.filterLinks(
-        newDate,
+        currentDate,
         this.linkType,
         this.data.links
       );
@@ -289,7 +285,7 @@ export default {
         this.data.nodes,
         this.current.links
       );
-      this.current.groups = this.f.filterGroups(this.data.groups, newDate);
+      this.current.groups = this.f.filterGroups(this.data.groups, currentDate);
       this.current.nodes = this.reassignGroups(
         this.current.nodes,
         this.current.groups

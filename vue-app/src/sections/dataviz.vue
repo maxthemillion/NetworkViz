@@ -81,7 +81,7 @@ export default {
 
       this.componentKey += 1;
 
-      this.opts.date.min = moment(Object.keys(this.data.groups).sort()[0]);
+      this.opts.date.min = moment(Object.keys(this.data.no_links).sort()[0]);
       this.opts.date.max = moment(
         Math.max.apply(
           Math,
@@ -91,11 +91,13 @@ export default {
         )
       );
       this.reload = false;
+
+      this.setDate(this.opts.date.min.startOf('isoWeek'))
     }
   },
   methods: {
     setDate: function(d) {
-      this.currentDate = d;
+      this.currentDate = d.startOf('isoWeek');
     },
     setEnd: function(d) {
       this.lastUpdated = d;

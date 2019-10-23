@@ -100,7 +100,7 @@ export default {
         );
         value = Math.round(value);
 
-        const newDate = moment(value).startOf("week");
+        const newDate = moment(value).startOf("isoWeek");
         if (!newDate.isSame(_this.oldDate)) {
           _this.updateHandlePosition(newDate);
           _this.$emit("dateSelect", moment(newDate));

@@ -8,6 +8,7 @@ export default {
   data() {
     return {
       dataFunc: this.readModularity,
+      formatLabel: this.formatL,
       title: "Modularity"
     };
   },
@@ -24,6 +25,11 @@ export default {
       }
 
       return modularityData;
+    },
+
+    formatL: function(value) {
+      const formatted = value.toFixed(2)
+      return formatted
     }
   },
   mounted() {}
