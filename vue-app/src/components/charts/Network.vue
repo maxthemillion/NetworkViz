@@ -276,7 +276,6 @@ export default {
     update(currentDate) {
       this.current.links = this.f.filterLinks(
         currentDate,
-        this.linkType,
         this.data.links
       );
       this.updateLinkedByIndex(this.current.links);

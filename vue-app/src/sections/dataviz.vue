@@ -31,7 +31,7 @@
         <Slider
           v-if="initialized"
           :opts="opts"
-          :selected="selected"
+          :selection="selection"
           v-on:dateSelect="setDate"
           v-on:dateSelectEnd="setEnd"
           :key="componentKey"
@@ -57,7 +57,7 @@ export default {
     Network
   },
   props: {
-    selected: String,
+    selection: String,
     data: {}
   },
   data: function() {
@@ -77,7 +77,7 @@ export default {
   },
   watch: {
     data: function() {
-      this.initialized = this.selected !== "";
+      this.initialized = this.selection !== "";
 
       this.componentKey += 1;
 

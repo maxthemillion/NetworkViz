@@ -7,6 +7,7 @@
     </div>
     <div class="slider-tray"></div>
     <div class="slider-handle">
+      <div class="slider-label">{{ this.currentDate }}</div>
       <div class="slider-handle-icon"></div>
     </div>
   </div>
@@ -21,6 +22,10 @@ export default {
   props: {
     selected: {},
     opts: {}
+  },
+  data: function(){ return {
+    currentDate: String
+    }
   },
   watch: {
     selected: function() {
@@ -92,6 +97,7 @@ export default {
         );
         _this.$emit("dateSelect", moment(date));
         _this.updateHandlePosition(date);
+        _this.updateSliderLabel(date);
       });
 
       this.dispatch.on("sliderEnd", function() {
@@ -110,7 +116,11 @@ export default {
       });
     },
     updateHandlePosition: function(date) {
+      date = moment(date).startOf('isoWeek').format('x')
       this.select.sliderHandle.style("left", this.sliderScale(date) + "px");
+    },
+    updateSliderLabel: function(date){
+      this.currentDate = moment(date).startOf('isoWeek').format('DD MMMM YYYY')
     }
   },
   mounted() {
@@ -166,4 +176,15 @@ export default {
   top: -7px;
   left: -7px;
 }
+
+.slider-label{
+    font-size: 11px;
+    top: -25px;
+    left: -20px;
+    position: absolute;
+    width: 100px;
+
+}
+
+
 </style>

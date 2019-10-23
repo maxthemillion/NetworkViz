@@ -3,7 +3,6 @@ import * as moment from "moment";
 
 export default class Filter {
   constructor(showLinkColor) {
-    this.linkInterval = 30;
     this.showLinkColor = showLinkColor; // TODO: missplaced attribute. move to better fit.
     this._d3 = d3;
   }
@@ -36,9 +35,8 @@ export default class Filter {
     return filteredNodes;
   }
 
-  filterLinks(date, type, links) {
+  filterLinks(date, links) {
     links = this._forDate(date, links);
-    links = this._forType(type, links);
     links = this._consolidate(links);
     return links;
   }
@@ -65,27 +63,18 @@ export default class Filter {
   }
 
   _forDate(date, links) {
-    date = moment(date);
+    date = moment(date).startOf("isoWeek");
+
     links = d3
       .nest()
       .key(function(d) {
-        return moment(d.timestamp).format("YYYY-WW");
+        return moment(d.timestamp)
+          .startOf("isoWeek")
+          .format("YYYY-MM-DD");
       })
       .map(links);
-    links = links["$" + date.format("YYYY-WW")];
-    return links;
-  }
 
-  _forType(linkType, links) {
-    links = links.filter(function(d) {
-      if (linkType === "all") {
-        return true;
-      } else {
-        return d.rel_type === linkType;
-      }
-    });
-
-    return links;
+    return links["$" + date.format("YYYY-MM-DD")];
   }
 
   _consolidate(links) {

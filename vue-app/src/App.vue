@@ -1,7 +1,7 @@
 <template>
   <div id="app">
-    <Opener @user-select="fetchData" />
-    <Dataviz v-bind:selected="selected" v-bind:data="data" />
+    <Opener @userSelect="fetchData" />
+    <Dataviz v-bind:selection="selection" v-bind:data="data" />
   </div>
 </template>
 
@@ -21,21 +21,19 @@ export default {
   data: function() {
     return {
       data: {},
-      selected: ""
+      selection: ""
     };
   },
-  mounted() {},
   methods: {
-    fetchData: async function(d) {
-      this.selected = d;
-      const dataName = "./viz_" + this.selected + ".json";
+    fetchData: async function(selection) {
+      this.selection = selection;
+      const dataName = "./viz_" + this.selection + ".json";
       const _this = this;
-      this.data = await d3.json(dataName, function(data) {
-        data = _this.parseDateStrings(data);
-        data = _this.castIntegers(data);
+      this.data = await d3.json(dataName, function(d) {
+        d = _this.parseDateStrings(d);
+        d = _this.castIntegers(d);
         return data;
       });
-      // eslint-disable-next-line
     },
 
     parseDateStrings: function(data) {

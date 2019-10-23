@@ -22,7 +22,7 @@ export default {
   props: {},
   data: function() {
     return {
-      selected: ""
+      selection: ""
     };
   },
   methods: {
@@ -51,14 +51,14 @@ export default {
         .style("opacity", 1);
     },
     dropdownChange: function() {
-      this.selected = d3.select("#selector").property("value");
+      this.selection = d3.select("#selector").property("value");
 
       d3.select("#caret")
         .transition()
         .duration(1000)
         .style("opacity", "1");
 
-      this.$emit("user-select", this.selected);
+      this.$emit("userSelect", this.selection);
     }
   },
   computed: {},
