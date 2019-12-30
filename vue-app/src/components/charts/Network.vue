@@ -2,9 +2,21 @@
   <div id="wrapper">
     <svg id="graph">
       <g id="chartLayer" transform="translate(0,0)"></g>
-      <g id='resetZoomButton' transform="translate(15,4)" v-on:click='resetZoom' >
-        <rect x=40 y=0 width='8em' height='2em' rx=5 stroke='deepskyblue' fill=None ></rect>
-        <text x=55 y=1.4em fill='deepskyblue'>reset zoom  </text>
+      <g
+        id="resetZoomButton"
+        transform="translate(15,4)"
+        v-on:click="resetZoom"
+      >
+        <rect
+          x="40"
+          y="0"
+          width="8em"
+          height="2em"
+          rx="5"
+          stroke="deepskyblue"
+          fill="None"
+        ></rect>
+        <text x="55" y="1.4em" fill="deepskyblue">reset zoom</text>
       </g>
     </svg>
   </div>
@@ -131,10 +143,10 @@ export default {
       }
     },
     resetZoom() {
-        this.svg
-          .transition()
-          .duration(750)
-          .call(this.zoom.transform, d3.zoomIdentity);
+      this.svg
+        .transition()
+        .duration(750)
+        .call(this.zoom.transform, d3.zoomIdentity);
     },
     initNodePositions() {
       const elem = this;
@@ -184,7 +196,7 @@ export default {
       this.select.nodeCircles
         .exit()
         .transition()
-        .duration(function(d) {
+        .duration(function() {
           return elem.select.nodeCircles.exit().size() === 0
             ? 0
             : transitionDuration;
@@ -196,7 +208,7 @@ export default {
       this.select.linkPolygons
         .exit()
         .transition()
-        .duration(function(d) {
+        .duration(function() {
           return elem.select.nodeCircles.exit().size() === 0
             ? 0
             : transitionDuration;
@@ -316,7 +328,7 @@ export default {
     highlight() {
       const elem = this;
 
-      function emphasize(d, hoverNode) {
+      function emphasize(d) {
         if (!elem.highlightLocked) {
           elem.highlightActive = true;
 
@@ -355,8 +367,8 @@ export default {
       let tooltip;
       d3.selectAll(".nodeCircle")
         .on("mouseover", function(d) {
-          emphasize(d, this);
-          tooltip = new Tooltip(this, d);
+          emphasize(d);
+          /* tooltip = new Tooltip(this, d); */
         })
         .on("mouseout", function() {
           equalize();

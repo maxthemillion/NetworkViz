@@ -68,12 +68,12 @@ export default {
   height: 15px;
   width: 30px;
   fill: deepskyblue;
-  opacity:0.4;
+  opacity: 0.4;
   position: relative;
 }
 
 #label-text {
-  font-size:10px;
-  fill:white;
+  font-size: 10px;
+  fill: white;
 }
 </style>

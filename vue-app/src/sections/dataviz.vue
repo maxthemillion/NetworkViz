@@ -92,12 +92,12 @@ export default {
       );
       this.reload = false;
 
-      this.setDate(this.opts.date.min.startOf('isoWeek'))
+      this.setDate(this.opts.date.min.startOf("isoWeek"));
     }
   },
   methods: {
     setDate: function(d) {
-      this.currentDate = d.startOf('isoWeek');
+      this.currentDate = d.startOf("isoWeek");
     },
     setEnd: function(d) {
       this.lastUpdated = d;
@@ -112,7 +112,6 @@ export default {
 </script>
 
 <style lang="css" scoped>
-
 #content-wrapper {
   height: 85vh;
   min-width: 100vw;
@@ -131,9 +130,9 @@ export default {
   width: 66%;
   height: 90%;
   position: relative;
-  display: inline-block; 
-  min-height:400px;
-  min-width:300px; 
+  display: inline-block;
+  min-height: 400px;
+  min-width: 300px;
   float: left;
 }
 
@@ -167,7 +166,7 @@ export default {
 </style>
 
 <style lang="css">
-#chart-wrapper{
+#chart-wrapper {
   margin-top: 10px;
 }
 </style>

@@ -15,7 +15,17 @@
 <script>
 import * as d3 from "d3";
 const transitionDuration = 1000;
-const projectNames = ['', 'OneDrive', 'waffleio', 'getnikola', 'Tribler', 'BobPalmer', 'novus', 'rathena', 'gatsbyjs'];
+const projectNames = [
+  "",
+  "OneDrive",
+  "waffleio",
+  "getnikola",
+  "Tribler",
+  "BobPalmer",
+  "novus",
+  "rathena",
+  "gatsbyjs"
+];
 
 export default {
   name: "Opener",
@@ -47,7 +57,7 @@ export default {
       d3.select("#selector")
         .transition()
         .delay(transitionDuration)
-        .duration(transitionDuration)
+        .duration(transitionDuration);
     },
     dropdownChange: function() {
       this.selection = d3.select("#selector").property("value");
@@ -108,15 +118,15 @@ h1 {
   color: deepskyblue;
   background-color: #12111d;
   font-size: 1em;
-  border-color:deepskyblue;
+  border-color: deepskyblue;
   border-radius: 5px;
   display: inline-block;
   height: 2em;
   padding: 0 20px;
-  cursor:pointer;
+  cursor: pointer;
 }
 
-#selector:hover{
-  opacity:1;
+#selector:hover {
+  opacity: 1;
 }
 </style>

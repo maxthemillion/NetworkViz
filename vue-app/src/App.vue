@@ -31,8 +31,7 @@ export default {
       const _this = this;
       this.data = await d3.json(dataName, function(d) {
         d = _this.parseDateStrings(d);
-        d = _this.castIntegers(d);
-        return data;
+        _this.castIntegers(d);
       });
     },
 

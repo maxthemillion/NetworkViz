@@ -23,9 +23,10 @@ export default {
     selected: {},
     opts: {}
   },
-  data: function(){ return {
-    currentDate: String
-    }
+  data: function() {
+    return {
+      currentDate: String
+    };
   },
   watch: {
     selected: function() {
@@ -45,7 +46,9 @@ export default {
         max: this.opts.date.max
       };
 
-      this.currentDate = moment(this.date.min).startOf('isoWeek').format('DD MMMM YYYY')
+      this.currentDate = moment(this.date.min)
+        .startOf("isoWeek")
+        .format("DD MMMM YYYY");
 
       this.select = {};
       this.select.slider = d3.select(".slider");
@@ -118,11 +121,15 @@ export default {
       });
     },
     updateHandlePosition: function(date) {
-      date = moment(date).startOf('isoWeek').format('x')
+      date = moment(date)
+        .startOf("isoWeek")
+        .format("x");
       this.select.sliderHandle.style("left", this.sliderScale(date) + "px");
     },
-    updateSliderLabel: function(date){
-      this.currentDate = moment(date).startOf('isoWeek').format('DD MMMM YYYY')
+    updateSliderLabel: function(date) {
+      this.currentDate = moment(date)
+        .startOf("isoWeek")
+        .format("DD MMMM YYYY");
     }
   },
   mounted() {
@@ -177,21 +184,18 @@ export default {
   background-color: deepskyblue;
   top: -7px;
   left: -7px;
-  cursor:pointer;
+  cursor: pointer;
 }
 
-.slider-label{
-    font-size: 11px;
-    top: -25px;
-    left: -20px;
-    position: absolute;
-    width: 100px;
-
+.slider-label {
+  font-size: 11px;
+  top: -25px;
+  left: -20px;
+  position: absolute;
+  width: 100px;
 }
 
-#axis_container{
+#axis_container {
   overflow: visible;
 }
-
-
 </style>

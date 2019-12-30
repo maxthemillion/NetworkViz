@@ -1,7 +1,6 @@
 <script>
 import Linechart from "./LineChart.vue";
 import * as moment from "moment";
-import * as d3 from "d3";
 
 export default {
   name: "LinksChart",
@@ -20,7 +19,9 @@ export default {
 
       for (let i = 0; i < keys.length; ++i) {
         noLinks.push({
-          key: moment(keys[i]).startOf('isoWeek').format("YYYY-MM-DD"),
+          key: moment(keys[i])
+            .startOf("isoWeek")
+            .format("YYYY-MM-DD"),
           value: +this.data.no_links[keys[i]]
         });
       }
@@ -28,8 +29,8 @@ export default {
       return noLinks;
     },
     formatL: function(value) {
-      const formatted = value
-      return formatted
+      const formatted = value;
+      return formatted;
     }
   },
   mounted() {}
