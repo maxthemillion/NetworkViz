@@ -2,3 +2,4 @@
 /vue-app/node_modules
 /manipulation/.ipynb_checkpoints
 */**.ipynb_checkpoints/
+/vue-app/dist

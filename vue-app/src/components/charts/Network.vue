@@ -265,10 +265,7 @@ export default {
       this.highlight();
     },
     update(currentDate) {
-      this.current.links = this.f.filterLinks(
-        currentDate,
-        this.data.links
-      );
+      this.current.links = this.f.filterLinks(currentDate, this.data.links);
       this.updateLinkedByIndex(this.current.links);
       this.calculateNodeWeight(this.data.nodes, this.current.links);
       this.current.nodes = this.f.filterNodes(
@@ -449,7 +446,7 @@ export default {
   height: 100%;
 }
 
-#resetZoomButton{
+#resetZoomButton {
   font-size: 12px;
   opacity: 0.8;
   fill: black;
@@ -457,7 +454,7 @@ export default {
   pointer-events: all;
 }
 
-#resetZoomButton:hover{
-  opacity:1;
+#resetZoomButton:hover {
+  opacity: 1;
 }
 </style>

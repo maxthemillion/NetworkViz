@@ -82,7 +82,7 @@ h1 {
 #title-wrapper {
   position: relative;
   left: 7.5%;
-  top: 15%;
+  top: 20px;
   width: 80%;
 }
 
