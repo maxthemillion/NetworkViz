@@ -91,7 +91,7 @@ export default class Filter {
         return d.target;
       })
       .rollup(function(values) {
-        return d3.sum(values, function(d) {
+        return d3.sum(values, function() {
           return 1;
         });
       })
